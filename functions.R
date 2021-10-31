@@ -10,7 +10,7 @@
 
 study_areas = st_read("area.shp")
 tif_dirs_full <- list.dirs(datasets_dir)[-1] #gets all the folders in the dataset_dir without the dataset_dir folder
-tif_dirs <- list.dirs(datasets_dir,full.names = FALSE, recursive = FALSE)
+#tif_dirs <- list.dirs(datasets_dir, full.names = TRUE, recursive = TRUE)
 
 
 
