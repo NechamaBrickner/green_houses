@@ -86,14 +86,18 @@ AddImageTexture <- function(cropped) {
   return(all_layers)
 }
 
-# Perform_Segmentation <- function(bands_tif_path) {
-#   superpxl <- st_set_crs(supercells(rastername, k = 500, compactness = 100, iter = 30), 32636) # makes the superpixel and gives it a coord system!
-# }
 
-Perform_Segmentation <- function(all_layers) {
-  superpxl <-supercells::supercells(all_layers, k = 2000, compactness = 100, iter = 30)# makes the superpixel and gives it a coord system!
-  #shpname = paste0(bands_tif_path, SP)
-  #st_write(superpxl, paste0(shpname, ".shp")) #save the superpixel as a shp file
+Perform_Segmentation <- function(all_layers, d, sa) {
+  superpxl <- supercells(all_layers,
+                         k = 2000, compactness = 100, iter = 30)
+  
+  # Create name to save superpixel polygons as geopackage
+  # Get Landsat date from the directory name
+  d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+  datestr <- unlist(d_split)[4]
+  shpname = paste(sa, datestr, "segments", sep="_")
+  shppath <- file.path(GIS_dir, paste0(shpname, ".gpkg"))
+  st_write(superpxl, shppath) #save the superpixel as a shp file
 }
 
 #where do we want to save it? its own folder?

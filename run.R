@@ -36,9 +36,8 @@ segmentations <- lapply(study_areas$name, function(sa){
       # return(bands_tif_path)
       
       #bands_tif_path <- AddImageTexture(cropped, d)
-      segmentation <- Perform_Segmentation(crop_all_layers)
-      # shpname <- paste0(study_area, tif_dirs_full == d, ".shp")
-      # st_write(segmentation, shpname) #save the superpixel as a shp file
+      segmentation <- Perform_Segmentation(crop_all_layers, d, sa)
+     
       return(segmentation)
     }
   })
