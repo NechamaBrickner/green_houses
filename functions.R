@@ -10,7 +10,7 @@
 
 study_areas = st_read("area.shp")
 tif_dirs_full <- list.dirs(datasets_dir)[-1] #gets all the folders in the dataset_dir without the dataset_dir folder
-tif_dirs <- list.dirs(datasets_dir,full.names = FALSE, recursive = FALSE)
+#tif_dirs <- list.dirs(datasets_dir, full.names = TRUE, recursive = TRUE)
 
 
 
@@ -86,14 +86,17 @@ AddImageTexture <- function(cropped) {
   return(all_layers)
 }
 
-# Perform_Segmentation <- function(bands_tif_path) {
-#   superpxl <- st_set_crs(supercells(rastername, k = 500, compactness = 100, iter = 30), 32636) # makes the superpixel and gives it a coord system!
-# }
 
-Perform_Segmentation <- function(all_layers) {
-  superpxl <-supercells::supercells(all_layers, k = 2000, compactness = 100, iter = 30)# makes the superpixel and gives it a coord system!
-  #shpname = paste0(bands_tif_path, SP)
-  #st_write(superpxl, paste0(shpname, ".shp")) #save the superpixel as a shp file
+Perform_Segmentation <- function(all_layers, d, sa) {
+  superpxl <- supercells(all_layers,
+                         k = 2000, compactness = 500, iter = 30)
+  
+  # Create name to save superpixel polygons as geopackage
+  # Get Landsat date from the directory name
+  d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+  datestr <- unlist(d_split)[4]
+  shpname = paste(sa, datestr, "segments", sep="_")
+  shppath <- file.path(GIS_dir, paste0(shpname, ".gpkg"))
+  st_write(superpxl, shppath, append = FALSE) #save the superpixel as a gpkg file, and overwrite if the file already exists 
 }
 
-#where do we want to save it? its own folder?
