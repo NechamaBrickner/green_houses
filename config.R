@@ -20,12 +20,13 @@ if (any(installed_packages == FALSE)) {
 # Package loading
 lapply(pkg_list, library, character.only = TRUE)
 
-# install.packages("remotes")
-# add if not installed, install now
-if(!require(supercells)){
-  remotes::install_github("Nowosad/supercells")
-  library("supercells")
-}
+# not using supercells
+# # install.packages("remotes")
+# # add if not installed, install now
+# if(!require(supercells)){
+#   remotes::install_github("Nowosad/supercells")
+#   library("supercells")
+# }
 
 # remotes::install_github("Nowosad/supercells")
 # library("supercells")
@@ -48,4 +49,10 @@ if (!dir.exists(datasets_dir)) {
 cropped_dir <- "./cropped"
 if (!dir.exists(cropped_dir)) {
   dir.create(cropped_dir)
+}
+
+# folder for output
+output_dir = "./output"
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
 }
