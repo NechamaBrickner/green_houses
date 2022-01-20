@@ -1,0 +1,183 @@
+
+# Random Forest functions based of of klils
+
+load_rast_4_RF <- function(rast_4_RF, rast_shp){
+  # folder with the tifs to make the list
+  # take only the tifs with "_SR_" in name
+  # which bands to take
+  # create a raster with the wanted bands
+  # give the bands names by color/wavelength 
+  tif_list_RF = list.files("Landsat_datasets\\r_4_classification\\LC08_L2SP_174039_20200418_20200822_02_T1", pattern = "TIF$", full.names = TRUE)
+  tif_list_RF <- tif_list_RF[grep(pattern="_SR_", x=tif_list_RF)]
+  tif_list_RF <- tif_list_RF[grep(pattern = "B1|B2|B3|B4|B5|B6|B7", x = tif_list_RF)]
+  tif_stk_RF <- rast(tif_list_RF)
+  names(tif_stk_RF) <- c("aerosol", "blue", "green", "red",
+                      "NIR", "SWIR1", "SWIR2") 
+  # load shpfile of classification area
+  # convert it to a vect object
+  rast_shp <- st_read("GIS\\classification_area.shp")
+  rast_shp <- vect(rast_shp)
+  
+  # crop and mask the raster with the shpfile
+  crop_rast <- terra::crop(tif_stk_RF, rast_shp)
+  mask_rast <- terra::mask(crop_rast, rast_shp)
+  
+  return(mask_rast)
+}
+
+
+addallbands <- function(mask_rast) {
+  # create glcm texture bands to the green band of the raster
+    # to use glcm the band raster need to be in raster format and not terra-rast
+  # texture bands are variance and second moment
+  # give the texture bands names
+  # create an NDVI band
+  # give it a name
+  texture = glcm(raster(mask_rast$green), 
+                 statistics = c('variance','homogeneity','contrast','dissimilarity', 'entropy', 'second_moment'), 
+                 na_opt = "ignore")
+  names(texture) <- c("variance", "homogrneity","contrast","dissimilarity", "entropy","second_moment") 
+  ndvi = (mask_rast$NIR - mask_rast$red)/(mask_rast$NIR + mask_rast$red)
+  names(ndvi) = "NDVI"
+  
+  # combine all the bands to 1 raster
+    # the texture bands need to be converted to terra-rast format
+  all_rast_4_RF <- c(mask_rast, rast(texture), ndvi)
+  
+  return(all_rast_4_RF)
+}
+
+
+create_td <- function(training_data_RF, all_rast_4_RF){
+  
+  # load training data shpfile
+  # convert it to a vect object
+  training_data <- st_read("GIS\\classification_point_less_groups.shp")
+  training_data_v = vect(training_data) #convert to vect to us the extract function 
+  
+  # use extract to give each point the value of the pixel in each band
+  extract_points = terra::extract(all_rast_4_RF, training_data_v, method = "simple")
+  
+  # get rid of the geometry field in training_data table
+  # join the training data with the extract_points
+  training_data = st_drop_geometry(training_data)
+  training_data = left_join(training_data, extract_points, by = c("Id" = "ID"))
+  
+  # create a table with the names of classes and the number for each class as a factor
+  class_name = unique(training_data$Ground_Typ)
+  class_factor = 1:length(class_name)
+  class = as.data.frame(cbind(class_name, class_factor))
+  class$class_factor = factor(class$class_factor, labels = class_name)
+  
+  # join the training_data table with the factor data 
+  # get rid of columns that aren't needed
+  training_data = full_join(training_data, class, by = c("Ground_Typ" = "class_name"))
+  training_data = select(training_data, -Ground_Typ, -Area)
+  
+  # count number of incomplete rows and erases them
+  cnt_na <- sum(!complete.cases(training_data))
+  if (cnt_na > 0) {
+    print(paste("Number of rows with NA:", cnt_na, "(removing...)"))
+    training_data <- training_data[complete.cases(training_data),]
+  }
+  # get rid of rows with NA
+  # training_data = na.omit(training_data)
+
+  return(training_data)
+}
+
+
+Prepare_RF_Model <- function(training_data) {
+  # Limit number of variables that will be tried in train()
+  # To limit how many variable comgination are tried, We can set either:
+  # set tuneGrid (specify values for each parameter), or
+  # set tuneLength (specify how many options for all variables)
+  # Here is with tuneGrid:
+  # these numbers can be changed to get a better modle???
+  rfGrid <- expand.grid(mtry = 2:7,         # Number of variables at each split
+                        splitrule = "gini",  # How to decide when to split
+                        min.node.size = 1:4  # How deep each tree
+  )
+  # THis grid gives a total of 28 combinations of parameters??? not 24
+  
+  # Limit how many K-folds and how many retries 
+  rfControl <- trainControl(                # 10-fold CV, 3 repeats
+    method = "repeatedcv",
+    number = 10,
+    repeats = 4
+  )
+  
+  # Split train/test
+  train_idx <- createDataPartition(
+    y = training_data$class_factor,
+    p = .75,
+    list = FALSE
+  )
+  train_df <- training_data[train_idx,]
+  test_df <- training_data[-train_idx,]
+  
+  ## Parallel processing
+  ## Use 1/2 of the cores
+  # ncores = parallel::detectCores() / 2
+  # clust <- makeCluster(ncores)
+  # registerDoParallel(clust)
+  rfFit <- train(class_factor ~ ., data = train_df, 
+                 method = "ranger", 
+                 trControl = rfControl, 
+                 verbose = TRUE, 
+                 tuneGrid = rfGrid,
+                 preProcess=c("center", "scale"),
+                 importance = "permutation" 
+                 # -----Note:-----
+                 # discuss whether to use "impurity" or "permutation"
+  )
+  
+  # Save model
+  model_rds <- file.path(output_dir, "fitted_RF_model.RDS")
+  saveRDS(rfFit, model_rds)
+  # Model results:
+  cat("\nModel accuracy:\n")
+  print(rfFit$results[rownames(rfFit$bestTune),][c("Accuracy", "Kappa")])
+  
+  # Get and print variable importance
+  var_importance <- varImp(rfFit, scale=TRUE)
+  cat("\nVariable importance:\n")
+  print(var_importance)
+  varimp_file <- file.path(output_dir, "variable_importance.png")
+  vip <- ggplot(var_importance)
+  ggsave(varimp_file, plot = vip)
+  #png(varimp_file)
+  #plot(var_importance, main="Variable Importance")
+  #dev.off()
+  # stopCluster(clust)
+  
+  # Apply on test data, and show confusion matrix 
+  rfPred <- predict(rfFit, newdata = test_df)
+  con.mat <- confusionMatrix(rfPred, reference = test_df$class_factor)
+  cat("\nTest accuracy:\n") 
+  print(con.mat$overall[c("Accuracy", "Kappa")])
+  cat("\nConfusion matrix:")
+  print(con.mat$table)
+  return(rfFit)
+}
+
+
+#it always crashes!!
+ApplyRFModel <- function(all_rast_4_RF, fit) {
+  # Apply model to data.frame of original superpixels
+  # sp_predictors <- st_drop_geometry(superpixels) %>% 
+  #   subset(select = -c(supercells,x,y))
+  raster_predict <- predict(object = all_rast_4_RF, model = rfFit,
+                              factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
+                                          "Solar_Panels"))
+  # raster_predict <- factor(FC,
+  #              labels = c("FC", "bare_soil", "ring", "rock", "veg", "road"))
+  # sp_classified <- cbind(superpixels, FC)
+  # sp_classified_file <- file.path(Output_dir, "superpixels_classified.gpkg")
+  # st_write(obj = sp_classified, dsn=sp_classified_file,
+  #          layer = "superpixels_FC", append = FALSE, delete_layer = TRUE)
+  return(raster_predict)
+}
+
+#the same thing as above still crashes 
+#raster_predict = terra::predict(object = all_rast_4_RF, model = fit, fun = predict)
