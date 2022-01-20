@@ -8,7 +8,7 @@
 #   return(classes)
 # }
 
-study_areas = st_read("area.shp")
+study_areas = st_read("GIS\\area.shp")
 tif_dirs_full <- list.dirs(datasets_dir)[-1] #gets all the folders in the dataset_dir without the dataset_dir folder
 #tif_dirs <- list.dirs(datasets_dir, full.names = TRUE, recursive = TRUE)
 
@@ -65,7 +65,7 @@ AddImageTexture <- function(cropped) {
   texture <- glcm(raster(cropped$green), #converting the green band to raster format to work in glcm 
                   statistics =  c('variance', 'second_moment'),
                   na_opt = "ignore")
-  #names() #change the name to shorter??
+  names(texture) <- c("variance", "second_moment") 
   # -------------------------------
   # Do we want also an NDVI band?
   ndvi <- (cropped$NIR - cropped$red) / (cropped$NIR + cropped$red)
@@ -87,16 +87,17 @@ AddImageTexture <- function(cropped) {
 }
 
 
-Perform_Segmentation <- function(all_layers, d, sa) {
-  superpxl <- supercells(all_layers,
-                         k = 2000, compactness = 500, iter = 30)
-  
-  # Create name to save superpixel polygons as geopackage
-  # Get Landsat date from the directory name
-  d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
-  datestr <- unlist(d_split)[4]
-  shpname = paste(sa, datestr, "segments", sep="_")
-  shppath <- file.path(GIS_dir, paste0(shpname, ".gpkg"))
-  st_write(superpxl, shppath, append = FALSE) #save the superpixel as a gpkg file, and overwrite if the file already exists 
-}
+# not using supercells
+# Perform_Segmentation <- function(all_layers, d, sa) {
+#   superpxl <- supercells(all_layers,
+#                          k = 2000, compactness = 500, iter = 30)
+#   
+#   # Create name to save superpixel polygons as geopackage
+#   # Get Landsat date from the directory name
+#   d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+#   datestr <- unlist(d_split)[4]
+#   shpname = paste(sa, datestr, "segments", sep="_")
+#   shppath <- file.path(GIS_dir, paste0(shpname, ".gpkg"))
+#   st_write(superpxl, shppath, append = FALSE) #save the superpixel as a gpkg file, and overwrite if the file already exists 
+# }
 
