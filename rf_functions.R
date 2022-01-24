@@ -34,9 +34,9 @@ addallbands <- function(mask_rast) {
   # create an NDVI band
   # give it a name
   texture = glcm(raster(mask_rast$green), 
-                 statistics = c('variance','homogeneity','contrast','dissimilarity', 'entropy', 'second_moment'), 
+                 statistics = c('variance','contrast','dissimilarity', 'entropy'), 
                  na_opt = "ignore")
-  names(texture) <- c("variance", "homogrneity","contrast","dissimilarity", "entropy","second_moment") 
+  names(texture) <- c("variance", "contrast","dissimilarity", "entropy") 
   ndvi = (mask_rast$NIR - mask_rast$red)/(mask_rast$NIR + mask_rast$red)
   names(ndvi) = "NDVI"
   
@@ -58,32 +58,37 @@ create_td <- function(training_data_RF, all_rast_4_RF){
   # use extract to give each point the value of the pixel in each band
   extract_points = terra::extract(all_rast_4_RF, training_data_v, method = "simple")
   
-  # get rid of the geometry field in training_data table
-  # join the training data with the extract_points
-  training_data = st_drop_geometry(training_data)
-  training_data = left_join(training_data, extract_points, by = c("Id" = "ID"))
+  extract_points$ground_type = factor(training_data_v$Ground_Typ)
+  extract_points = select(extract_points, -ID)
   
-  # create a table with the names of classes and the number for each class as a factor
-  class_name = unique(training_data$Ground_Typ)
-  class_factor = 1:length(class_name)
-  class = as.data.frame(cbind(class_name, class_factor))
-  class$class_factor = factor(class$class_factor, labels = class_name)
   
+  
+  # # get rid of the geometry field in training_data table
+  # # join the training data with the extract_points
+  # training_data = st_drop_geometry(training_data)
+  # training_data = left_join(training_data, extract_points, by = c("Id" = "ID"))
+  # 
+  # # create a table with the names of classes and the number for each class as a factor
+  # class_name = unique(training_data$Ground_Typ)
+  # class_factor = 1:length(class_name)
+  # class = as.data.frame(cbind(class_name, class_factor))
+  # class$class_factor = factor(class$class_factor, labels = class_name)
+  # 
   # join the training_data table with the factor data 
   # get rid of columns that aren't needed
-  training_data = full_join(training_data, class, by = c("Ground_Typ" = "class_name"))
-  training_data = select(training_data, -Ground_Typ, -Area)
+  # training_data = full_join(training_data, class, by = c("Ground_Typ" = "class_name"))
+  # training_data = select(training_data, -Ground_Typ, -Area)
   
   # count number of incomplete rows and erases them
-  cnt_na <- sum(!complete.cases(training_data))
+  cnt_na <- sum(!complete.cases(extract_points))
   if (cnt_na > 0) {
     print(paste("Number of rows with NA:", cnt_na, "(removing...)"))
-    training_data <- training_data[complete.cases(training_data),]
+    extract_points <- extract_points[complete.cases(extract_points),]
   }
   # get rid of rows with NA
   # training_data = na.omit(training_data)
 
-  return(training_data)
+  return(extract_points)
 }
 
 
@@ -109,7 +114,7 @@ Prepare_RF_Model <- function(training_data) {
   
   # Split train/test
   train_idx <- createDataPartition(
-    y = training_data$class_factor,
+    y = training_data$ground_type,
     p = .75,
     list = FALSE
   )
@@ -121,7 +126,7 @@ Prepare_RF_Model <- function(training_data) {
   # ncores = parallel::detectCores() / 2
   # clust <- makeCluster(ncores)
   # registerDoParallel(clust)
-  rfFit <- train(class_factor ~ ., data = train_df, 
+  rfFit <- train(ground_type ~ ., data = train_df, 
                  method = "ranger", 
                  trControl = rfControl, 
                  verbose = TRUE, 
@@ -153,7 +158,7 @@ Prepare_RF_Model <- function(training_data) {
   
   # Apply on test data, and show confusion matrix 
   rfPred <- predict(rfFit, newdata = test_df)
-  con.mat <- confusionMatrix(rfPred, reference = test_df$class_factor)
+  con.mat <- confusionMatrix(rfPred, reference = test_df$ground_type)
   cat("\nTest accuracy:\n") 
   print(con.mat$overall[c("Accuracy", "Kappa")])
   cat("\nConfusion matrix:")
@@ -167,7 +172,7 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
   # Apply model to data.frame of original superpixels
   # sp_predictors <- st_drop_geometry(superpixels) %>% 
   #   subset(select = -c(supercells,x,y))
-  raster_predict <- predict(object = all_rast_4_RF, model = rfFit,
+  raster_predict <- terra::predict(object = all_rast_4_RF, model = fit,
                               factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
                                           "Solar_Panels"))
   # raster_predict <- factor(FC,
@@ -181,3 +186,20 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 
 #the same thing as above still crashes 
 #raster_predict = terra::predict(object = all_rast_4_RF, model = fit, fun = predict)
+
+#load study area
+area = st_read("GIS/area.shp")
+# pick 1 of the study areas
+area1 = area[1,]
+#crop raster to that area1
+study_area1 = terra::crop(raster1, area1)
+
+#dark green house = gray
+#ground = yellow
+#light green house = cyan
+#orchard = dark green
+#solar panels = black
+#water = blue
+
+col = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+plot(predictrf, col = col)
