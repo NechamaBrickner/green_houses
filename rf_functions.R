@@ -26,29 +26,29 @@ load_rast_4_RF <- function(rast_4_RF, rast_shp){
 }
 
 
-addallbands <- function(mask_rast) {
+addallbands <- function(raster) {
   # create glcm texture bands to the green band of the raster
     # to use glcm the band raster need to be in raster format and not terra-rast
   # texture bands are variance and second moment
   # give the texture bands names
   # create an NDVI band
   # give it a name
-  texture = glcm(raster(mask_rast$green), 
-                 statistics = c('variance','contrast','dissimilarity', 'entropy'), 
+  texture = glcm(raster(raster$green), 
+                 statistics = c('variance','contrast','dissimilarity'), 
                  na_opt = "ignore")
-  names(texture) <- c("variance", "contrast","dissimilarity", "entropy") 
-  ndvi = (mask_rast$NIR - mask_rast$red)/(mask_rast$NIR + mask_rast$red)
+  names(texture) <- c("variance", "contrast","dissimilarity") 
+  ndvi = (raster$NIR - raster$red)/(raster$NIR + raster$red)
   names(ndvi) = "NDVI"
   
   # combine all the bands to 1 raster
     # the texture bands need to be converted to terra-rast format
-  all_rast_4_RF <- c(mask_rast, rast(texture), ndvi)
+ allbands <- c(raster, rast(texture), ndvi)
   
-  return(all_rast_4_RF)
+  return(allbands)
 }
 
 
-create_td <- function(training_data_RF, all_rast_4_RF){
+create_td <- function(training_data_RF, allbands){
   
   # load training data shpfile
   # convert it to a vect object
@@ -56,11 +56,10 @@ create_td <- function(training_data_RF, all_rast_4_RF){
   training_data_v = vect(training_data) #convert to vect to us the extract function 
   
   # use extract to give each point the value of the pixel in each band
-  extract_points = terra::extract(all_rast_4_RF, training_data_v, method = "simple")
+  extract_points = terra::extract(allbands, training_data_v, method = "simple")
   
   extract_points$ground_type = factor(training_data_v$Ground_Typ)
   extract_points = select(extract_points, -ID)
-  
   
   
   # # get rid of the geometry field in training_data table
@@ -99,7 +98,7 @@ Prepare_RF_Model <- function(training_data) {
   # set tuneLength (specify how many options for all variables)
   # Here is with tuneGrid:
   # these numbers can be changed to get a better modle???
-  rfGrid <- expand.grid(mtry = 2:7,         # Number of variables at each split
+  rfGrid <- expand.grid(mtry = 2:5,         # Number of variables at each split
                         splitrule = "gini",  # How to decide when to split
                         min.node.size = 1:4  # How deep each tree
   )
@@ -166,6 +165,9 @@ Prepare_RF_Model <- function(training_data) {
   return(rfFit)
 }
 
+# #to check
+# rf_model2$bestTune
+# rf_model2$results
 
 #it always crashes!!
 ApplyRFModel <- function(all_rast_4_RF, fit) {
@@ -187,19 +189,35 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 #the same thing as above still crashes 
 #raster_predict = terra::predict(object = all_rast_4_RF, model = fit, fun = predict)
 
-#load study area
-area = st_read("GIS/area.shp")
-# pick 1 of the study areas
-area1 = area[1,]
-#crop raster to that area1
-study_area1 = terra::crop(raster1, area1)
+# #load study area
+# area = st_read("GIS/area.shp")
+# pick 1 of the study areasa
+# area1 = area[1,]
+# area2 = area[2,]
+# area3 = area[3,]
+# #crop raster to that area1
+# ein_yahav = terra::crop(raster1, area1)
+# hazeva = terra::crop(raster1, area2)
+# paran = terra::crop(raster1, area3)
+# #dark green house = gray
+# #ground = yellow
+# #light green house = cyan
+# #orchard = dark green
+# #solar panels = black
+# #water = blue
+# 
+# col = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+# x=levels(TD$ground_type)
 
-#dark green house = gray
-#ground = yellow
-#light green house = cyan
-#orchard = dark green
-#solar panels = black
-#water = blue
+# 
+# plotRGB(hazeva, 5, 4,3)
+# plotRGB(ein_yahav, 5, 4,3)
+# plotRGB(paran, 5, 4,3)
+#plot(hazeva_c, col = col, type = "classes", levels = x)
+# plot(ein_yahav_c, col = col, type = "classes", levels = x)
+# plot(paran_c, col = col,type = "classes", levels = x)
 
-col = c("gray", "yellow", "cyan", "dark green", "black", "blue")
-plot(predictrf, col = col)
+#plot(hazeva5, col=col,type = "classes", levels = x)
+ 
+
+ 
