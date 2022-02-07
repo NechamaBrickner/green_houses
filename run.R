@@ -1,5 +1,6 @@
 source("./config.R")
 source("./functions.R")
+source("./rf_functions.R")
 
 #'---------------------------------
 #' Start here
@@ -28,15 +29,16 @@ segmentations <- lapply(study_areas$name, function(sa){
       cropped <- CropDatasets(tif_list, study_area)
       crop_all_layers <- AddImageTexture(cropped)
       
-      #adding the part that saves the raster to the loopsgement
-      #raster_name <- (paste0(sa,"_", tif_dirs_full == d, ".tif"))
-       
-      #writeRaster(crop_all_layers, raster_name, overwrite = TRUE)
-      #writeRaster(all_layers, raster_name, overwrite = TRUE)
-      # return(bands_tif_path)
       
       #bands_tif_path <- AddImageTexture(cropped, d)
       #segmentation <- Perform_Segmentation(crop_all_layers, d, sa)
+      
+      #save the cropped images
+      d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+      datestr <- unlist(d_split)[4]
+      rastname = paste(sa, datestr, sep="_")
+      rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
+      terra::writeRaster(x= crop_all_layers, filename = rastpath, overwrite = TRUE)
      
       return(crop_all_layers)
     }
