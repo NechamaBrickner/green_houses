@@ -7,7 +7,7 @@ load_rast_4_RF <- function(rast_4_RF, rast_shp){
   # which bands to take
   # create a raster with the wanted bands
   # give the bands names by color/wavelength 
-  tif_list_RF = list.files("Landsat_datasets\\r_4_classification\\LC08_L2SP_174039_20200418_20200822_02_T1", pattern = "TIF$", full.names = TRUE)
+  tif_list_RF = list.files("r_4_classification\\LC08_L2SP_174039_20200418_20200822_02_T1", pattern = "TIF$", full.names = TRUE)
   tif_list_RF <- tif_list_RF[grep(pattern="_SR_", x=tif_list_RF)]
   tif_list_RF <- tif_list_RF[grep(pattern = "B1|B2|B3|B4|B5|B6|B7", x = tif_list_RF)]
   tif_stk_RF <- rast(tif_list_RF)
@@ -100,7 +100,7 @@ Prepare_RF_Model <- function(training_data) {
   # these numbers can be changed to get a better modle???
   rfGrid <- expand.grid(mtry = 2:5,         # Number of variables at each split
                         splitrule = "gini",  # How to decide when to split
-                        min.node.size = 1:4  # How deep each tree
+                        min.node.size = 2:4  # How deep each tree
   )
   # THis grid gives a total of 28 combinations of parameters??? not 24
   
@@ -108,7 +108,7 @@ Prepare_RF_Model <- function(training_data) {
   rfControl <- trainControl(                # 10-fold CV, 3 repeats
     method = "repeatedcv",
     number = 10,
-    repeats = 4
+    repeats = 5
   )
   
   # Split train/test
@@ -191,7 +191,7 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 
 # #load study area
 # area = st_read("GIS/area.shp")
-# pick 1 of the study areasa
+# #pick 1 of the study areasa
 # area1 = area[1,]
 # area2 = area[2,]
 # area3 = area[3,]
@@ -214,10 +214,27 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 # plotRGB(ein_yahav, 5, 4,3)
 # plotRGB(paran, 5, 4,3)
 #plot(hazeva_c, col = col, type = "classes", levels = x)
-# plot(ein_yahav_c, col = col, type = "classes", levels = x)
+plot(ein_yahav1, col = col, type = "classes", levels = x)
 # plot(paran_c, col = col,type = "classes", levels = x)
 
 #plot(hazeva5, col=col,type = "classes", levels = x)
- 
 
- 
+
+tif_cropped = list.files(cropped_dir) 
+# for (i in tif_cropped) {
+#   print(paste0("cropped\\", i))
+#   r = rast(paste0("cropped\\", i))
+#   #plot(r$red)
+#   r_1 = ApplyRFModel(all_rast_4_RF = r, fit = mod10)
+#   # plot(r_1)
+# }
+
+classify_raster = lapply(tif_cropped, function(r){
+  print(paste0("cropped\\", r))
+  r_1 = rast(paste0("cropped\\", r))
+  print(paste0("cropped\\", r, "1"))
+  #return(r_1)
+  #plot(r_1$blue)
+  classify_r = ApplyRFModel(all_rast_4_RF = r_1, fit = mod10)
+  return(classify_r)
+})
