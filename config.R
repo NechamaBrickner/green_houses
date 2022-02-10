@@ -56,3 +56,15 @@ output_dir = "./output"
 if (!dir.exists(output_dir)) {
   dir.create(output_dir)
 }
+
+# folder for  LST output
+LST_dir = "./output/LST"
+if (!dir.exists(LST_dir)) {
+  dir.create(LST_dir)
+}
+
+# folder for classified raster's output
+classified_dir = "./output/Classified"
+if (!dir.exists(classified_dir)) {
+  dir.create(classified_dir)
+}
