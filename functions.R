@@ -13,7 +13,6 @@ tif_dirs_full <- list.dirs(datasets_dir)[-1] #gets all the folders in the datase
 #tif_dirs <- list.dirs(datasets_dir, full.names = TRUE, recursive = TRUE)
 
 
-
 CropDatasets <- function(tif_list, study_area) {
   # Read list of TIF files into stack
   # Crop to extent of testing polygons
@@ -74,15 +73,7 @@ AddImageTexture <- function(cropped) {
   # Add to "cropped"
   # Convert texture bands back to terra "SpatRaster"
   all_layers <- c(cropped, rast(texture), ndvi)
-  #all_layers <- c(rast(cropped), rast(texture), rast(ndvi))
-  # Save to cropped_dir, use original directory name for the tif file
  
-  #base_tif_dir <-  basename(tif_dirs[2:length(tif_dirs)])
-  # base_tif_dir <-  basename(tif_dirs)
-  # bands_tif <- paste0(base_tif_dir, ".tif")
-  # bands_tif_path = file.path(cropped_dir, bands_tif)
-  # writeRaster(all_layers, bands_tif_path, overwrite = TRUE)
-  # return(bands_tif_path)
   return(all_layers)
 }
 
