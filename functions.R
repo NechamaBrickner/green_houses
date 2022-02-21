@@ -48,7 +48,7 @@ CropDatasets <- function(tif_list, study_area) {
   
   #study_area = st_read("area.shp") # shape i made, can this be outside of the function
   
-  cropped <- crop(tif_stk, study_area)
+  cropped <- terra::crop(tif_stk, study_area)
   
   #' Check bounding box of raster stack and study area
   # (st_bbox(study_area))
@@ -62,12 +62,12 @@ AddImageTexture <- function(cropped) {
   # Choose one band for glcm, i.e. green
   # Create texture bands from only one spectral band (texture bands from other bands will be almost the same)
   texture <- glcm(raster(cropped$green), #converting the green band to raster format to work in glcm 
-                  statistics =  c('variance', 'second_moment'),
+                  statistics =  c('variance', 'contrast'),
                   na_opt = "ignore")
-  names(texture) <- c("variance", "second_moment") 
+  names(texture) <- c("variance","contrast") 
   # -------------------------------
   # Do we want also an NDVI band?
-  ndvi <- (cropped$NIR - cropped$red) / (cropped$NIR + cropped$red)
+  ndvi <- ((cropped$NIR - cropped$red) / (cropped$NIR + cropped$red))
   names(ndvi) <- "NDVI"
   # -------------------------------
   # Add to "cropped"
