@@ -209,7 +209,7 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 # #solar panels = black
 # #water = blue
 # 
-# col = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+ #colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
 # x=levels(TD$ground_type)
 
 # 
@@ -223,21 +223,7 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 #plot(hazeva5, col=col,type = "classes", levels = x)
 
 
-tif_cropped = list.files(cropped_dir) 
-# for (i in tif_cropped) {
-#   print(paste0("cropped\\", i))
-#   r = rast(paste0("cropped\\", i))
-#   #plot(r$red)
-#   r_1 = ApplyRFModel(all_rast_4_RF = r, fit = mod10)
-#   # plot(r_1)
-# }
 
-classify_raster = lapply(tif_cropped, function(r){
-  print(paste0("cropped\\", r))
-  r_1 = rast(paste0("cropped\\", r))
-  print(paste0("cropped\\", r, "1"))
-  #return(r_1)
-  #plot(r_1$blue)
-  classify_r = ApplyRFModel(all_rast_4_RF = r_1, fit = mod10)
-  return(classify_r)
-})
+
+
+
