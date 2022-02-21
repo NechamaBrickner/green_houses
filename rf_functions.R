@@ -39,12 +39,15 @@ addallbands <- function(raster) {
   names(texture) <- c("variance", "contrast","dissimilarity") 
   ndvi = (raster$NIR - raster$red)/(raster$NIR + raster$red)
   names(ndvi) = "NDVI"
+  savi = 1.5*((raster$NIR - raster$red)/(raster$NIR + raster$red + 0.5))
+  names(savi) = "SAVI"
   
   # combine all the bands to 1 raster
     # the texture bands need to be converted to terra-rast format
- allbands <- c(raster, rast(texture), ndvi)
-  
-  return(allbands)
+  allbands <- c(raster, rast(texture), ndvi, savi)
+  #allbands <- c(raster, rast(texture), ndvi)
+ 
+   return(allbands)
 }
 
 
@@ -90,7 +93,7 @@ create_td <- function(training_data_RF, allbands){
   return(extract_points)
 }
 
-
+set.seed(12)
 Prepare_RF_Model <- function(training_data) {
   # Limit number of variables that will be tried in train()
   # To limit how many variable comgination are tried, We can set either:
@@ -108,7 +111,7 @@ Prepare_RF_Model <- function(training_data) {
   rfControl <- trainControl(                # 10-fold CV, 3 repeats
     method = "repeatedcv",
     number = 10,
-    repeats = 5
+    repeats = 4
   )
   
   # Split train/test
@@ -214,7 +217,7 @@ ApplyRFModel <- function(all_rast_4_RF, fit) {
 # plotRGB(ein_yahav, 5, 4,3)
 # plotRGB(paran, 5, 4,3)
 #plot(hazeva_c, col = col, type = "classes", levels = x)
-plot(ein_yahav1, col = col, type = "classes", levels = x)
+#plot(ein_yahav1, col = col, type = "classes", levels = x)
 # plot(paran_c, col = col,type = "classes", levels = x)
 
 #plot(hazeva5, col=col,type = "classes", levels = x)
