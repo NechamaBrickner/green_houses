@@ -67,10 +67,10 @@ TD = create_td(training_data_RF, allbands = raster1)
 # delete columns not used in the random forest 
 # will change depending on what model we use
 ## normally has blue but for now has geen
-TD1 = TD %>%
-  select(-aerosol, -red, -blue, -SWIR2, -dissimilarity, - SAVI)
+# TD1 = TD %>%
+#   select(-aerosol, -red, -blue, -SWIR2, -dissimilarity, - SAVI)
 # run the random forest model
-mod = Prepare_RF_Model(training_data = TD1)
+mod = Prepare_RF_Model(training_data = TD)
 
 # get names of cropped raster's
 tif_cropped = list.files(cropped_dir)
@@ -84,19 +84,21 @@ x = levels(TD$ground_type)
 
 classify_raster = lapply(tif_cropped, function(r){
   print(paste0("cropped\\", r))
-  r_1 = rast(paste0("cropped\\", r)) # load raster
-  #plot(r_1$green, main = paste(r, "green band"))
+  r_1 = rast(paste0("cropped\\", r))# load raster
+  r_1 = r_1[[bands]]
+  #plot(r_1)
   classify_r = ApplyRFModel(all_rast_4_RF = r_1, fit = mod) # classify the raster
   r_split <- strsplit(x=basename(r), split = ".", fixed = TRUE)
   r_split <- unlist(r_split)[1]
   rastname = paste( r_split, "classified", sep="_")
   rastpath <- file.path(classified_dir, paste0(rastname, ".tif"))
   plot(classify_r, col = colors, type = "classes", levels = x, main = paste(r, "classified"))
-  writeRaster(classify_r, filename = rastpath, overwrite = TRUE ) # save the raster
-  return(classify_r)
+  # writeRaster(x = classify_r, filename = rastpath, overwrite = TRUE ) # save the raster
+   return(classify_r)
+  #return(r_1)
 })
 
-
+#cheek 3, 12, 21
 
 
 LST_crop <- lapply(study_areas$name, function(sa){
@@ -110,14 +112,14 @@ LST_crop <- lapply(study_areas$name, function(sa){
       print(paste("In:", sa, "directory:", d))
       study_area <- study_areas[study_areas$name == sa,]
       LST_b <- LST_band(tif_list, study_area)
-      print(range(LST_b))
-      
+      #print(range(LST_b))
+     
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
       rastname = paste("LST", sa, datestr, sep="_")
       rastpath <- file.path(LST_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= LST_b, filename = rastpath, overwrite = TRUE)
-      
+      plot(LST_b, main = paste(rastname, "C", sep = " "))
       
       return(LST_b)
     }
