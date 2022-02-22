@@ -99,6 +99,32 @@ classify_raster = lapply(tif_cropped, function(r){
 
 
 
+LST_crop <- lapply(study_areas$name, function(sa){
+  lapply(tif_dirs_full, function(d) {
+    # Get list of TIF files in each dir
+    # Read into rast, and crop
+    tif_list = list.files(d, pattern = "TIF$",
+                          full.names = TRUE, recursive = TRUE)
+    if (length(tif_list) > 0) {
+      
+      print(paste("In:", sa, "directory:", d))
+      study_area <- study_areas[study_areas$name == sa,]
+      LST_b <- LST_band(tif_list, study_area)
+      print(range(LST_b))
+      
+      d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+      datestr <- unlist(d_split)[4]
+      rastname = paste("LST", sa, datestr, sep="_")
+      rastpath <- file.path(LST_dir, paste0(rastname, ".tif"))
+      terra::writeRaster(x= LST_b, filename = rastpath, overwrite = TRUE)
+      
+      
+      return(LST_b)
+    }
+  })
+})
+
+
 
 
 
