@@ -92,3 +92,28 @@ AddImageTexture <- function(cropped) {
 #   st_write(superpxl, shppath, append = FALSE) #save the superpixel as a gpkg file, and overwrite if the file already exists 
 # }
 
+LST_band = function(tif_list, study_area) {
+  
+  if (length(grep(pattern = "LT05", tif_list, fixed = TRUE)) > 0) {
+    #select thermal band landsat 5 - B6
+    LST_05 <- tif_list[grep(pattern="LT05_", x = tif_list)]
+    LST_05 <- LST_05[grep(pattern="ST", x = LST_05)]
+    LST_05 <- LST_05[grep(pattern = "B6", x = LST_05)]  
+    LST <- rast(LST_05)
+    names(LST) <- "LST"
+  }
+  
+  else {
+    #select thermal band landsat 8 - B10
+    LST_08 <- tif_list[grep(pattern="LC08_", x=tif_list)]
+    LST_08 <- LST_08[grep(pattern="ST", x=LST_08)]
+    LST_08 <- LST_08[grep(pattern = "B10", x = LST_08)] 
+    LST <- rast(LST_08)
+    names(LST) <- "LST"
+  }
+  
+  cropped <- crop(LST, study_area)
+  
+  return(cropped)
+  
+}
