@@ -68,3 +68,6 @@ classified_dir = "./output/Classified"
 if (!dir.exists(classified_dir)) {
   dir.create(classified_dir)
 }
+
+# Bands to be used in the RF model
+bands=c("green","NIR","SWIR1", "variance", "contrast", "NDVI")
