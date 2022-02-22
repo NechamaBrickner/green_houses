@@ -113,7 +113,8 @@ LST_band = function(tif_list, study_area) {
   }
   
   cropped <- crop(LST, study_area)
-  
-  return(cropped)
+  cropped = cropped*0.00341802+149.0-272.15
+ 
+   return(cropped)
   
 }
