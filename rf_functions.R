@@ -46,6 +46,7 @@ addallbands <- function(raster) {
     # the texture bands need to be converted to terra-rast format
   allbands <- c(raster, rast(texture), ndvi, savi)
   #allbands <- c(raster, rast(texture), ndvi)
+  
  
    return(allbands)
 }
@@ -59,7 +60,8 @@ create_td <- function(training_data_RF, allbands){
   training_data_v = vect(training_data) #convert to vect to us the extract function 
   
   # use extract to give each point the value of the pixel in each band
-  extract_points = terra::extract(allbands, training_data_v, method = "simple")
+  train_bands <- allbands[[bands]]# selects wanted bands to build the model
+  extract_points = terra::extract(train_bands, training_data_v, method = "simple")
   
   extract_points$ground_type = factor(training_data_v$Ground_Typ)
   extract_points = select(extract_points, -ID)
