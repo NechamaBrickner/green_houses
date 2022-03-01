@@ -56,7 +56,7 @@ create_td <- function(training_data_RF, allbands){
   
   # load training data shpfile
   # convert it to a vect object
-  training_data <- st_read("GIS\\classification_point_less_groups.shp")
+  training_data <- st_read("GIS\\classification_points.shp")
   training_data_v = vect(training_data) #convert to vect to us the extract function 
   
   # use extract to give each point the value of the pixel in each band
