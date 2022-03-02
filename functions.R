@@ -1,18 +1,3 @@
-
-# load training data- i need to make
-# LoadTrainingData <- function() {
-#   #' Load training polygons (from geopackage) and
-#   #' raster image bands (geotiff) as terra stack
-#   classes_gpkg <- file.path(GIS_dir, "training_classes.gpkg")
-#   classes <- st_read(classes_gpkg)
-#   return(classes)
-# }
-
-study_areas = st_read("GIS\\area.shp")
-tif_dirs_full <- list.dirs(datasets_dir)[-1] #gets all the folders in the dataset_dir without the dataset_dir folder
-#tif_dirs <- list.dirs(datasets_dir, full.names = TRUE, recursive = TRUE)
-
-
 CropDatasets <- function(tif_list, study_area) {
   # Read list of TIF files into stack
   # Crop to extent of testing polygons

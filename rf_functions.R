@@ -1,32 +1,33 @@
 
 # Random Forest functions based of of klils
 
-load_rast_4_RF <- function(rast_4_RF, rast_shp){
-  # folder with the tifs to make the list
+CropRast_4_RF <- function(landsat_dir){
+  # "landsat_dir" is input folder with the tifs to make the list
   # take only the tifs with "_SR_" in name
-  # which bands to take
-  # create a raster with the wanted bands
+  # select bands to take
+  # create a raster stack with the wanted bands
   # give the bands names by color/wavelength 
-  tif_list_RF = list.files("r_4_classification\\LC08_L2SP_174039_20200418_20200822_02_T1", pattern = "TIF$", full.names = TRUE)
+  tif_list_RF = list.files(landsat_dir, pattern = "TIF$", full.names = TRUE)
   tif_list_RF <- tif_list_RF[grep(pattern="_SR_", x=tif_list_RF)]
-  tif_list_RF <- tif_list_RF[grep(pattern = "B1|B2|B3|B4|B5|B6|B7", x = tif_list_RF)]
+  tif_list_RF <- tif_list_RF[grep(pattern = "B1|B2|B3|B4|B5|B6|B7",
+                                  x = tif_list_RF)]
+  # create terra::SpatRaster (stack)
   tif_stk_RF <- rast(tif_list_RF)
   names(tif_stk_RF) <- c("aerosol", "blue", "green", "red",
                       "NIR", "SWIR1", "SWIR2") 
   # load shpfile of classification area
-  # convert it to a vect object
-  rast_shp <- st_read("GIS\\classification_area.shp")
-  rast_shp <- vect(rast_shp)
+  classification_shp <- vect(file.path(GIS_dir, "greenhouses.gpkg"),
+                             layer="classification_area")
   
   # crop and mask the raster with the shpfile
   crop_rast <- terra::crop(tif_stk_RF, rast_shp)
-  mask_rast <- terra::mask(crop_rast, rast_shp)
+  masked_rast <- terra::mask(crop_rast, rast_shp)
   
-  return(mask_rast)
+  return(masked_rast)
 }
 
 
-addallbands <- function(raster) {
+AddAllBands <- function(raster) {
   # create glcm texture bands to the green band of the raster
     # to use glcm the band raster need to be in raster format and not terra-rast
   # texture bands are variance and second moment
@@ -46,26 +47,25 @@ addallbands <- function(raster) {
     # the texture bands need to be converted to terra-rast format
   allbands <- c(raster, rast(texture), ndvi, savi)
   #allbands <- c(raster, rast(texture), ndvi)
-  
- 
-   return(allbands)
+  return(allbands)
 }
 
 
-create_td <- function(training_data_RF, allbands){
-  
-  # load training data shpfile
-  # convert it to a vect object
-  training_data <- st_read("GIS\\classification_point_less_groups.shp")
-  training_data_v = vect(training_data) #convert to vect to us the extract function 
+#' 
+CreateTrainingDF <- function(tif){
+  # "tif" is the chosen raster stack to be used *for training* 
+  # load training data points from geopackage
+  training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
+                        layer="classification_points")
   
   # use extract to give each point the value of the pixel in each band
+  allbands <- rast(tif)
   train_bands <- allbands[[bands]]# selects wanted bands to build the model
-  extract_points = terra::extract(train_bands, training_data_v, method = "simple")
+  extract_points = terra::extract(train_bands, training_data,
+                                  method = "simple")
   
-  extract_points$ground_type = factor(training_data_v$Ground_Typ)
+  extract_points$ground_type = factor(training_data$Ground_Typ)
   extract_points = select(extract_points, -ID)
-  
   
   # # get rid of the geometry field in training_data table
   # # join the training data with the extract_points
