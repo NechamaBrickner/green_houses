@@ -54,52 +54,56 @@ crop_rasters <- lapply(study_areas$name, function(sa){
 # create rasters for classification
 # This list holds all raster bands to be used in classification
 # for all dates to be examined
-rast_4_RF_list = lapply(tif_dirs_full, function(r) {
+classification_shp <- vect(file.path(GIS_dir, "greenhouses.gpkg"),
+                           layer="classification_area")
+rast_4_RF_list = lapply(tif_dirs_full, function(td) {
   # Mask to classification area
-  masked_raster <- CropRast_4_RF(r)
+  tif_list <- list.files(td, full.names = TRUE)
+  masked_raster <- CropDatasets(tif_list, classification_shp)
   # add texture and veg index bands
-  all_bands <- AddAllBands(masked_raster)
+  all_bands <- AddImageTexture(masked_raster)
   return(all_bands)
   })
+names(rast_4_RF_list) <- basename(tif_dirs_full)
 
-#Prepare RF Model using a single tif
-training_data = CreateTrainingDF(tif)
-# delete columns not used in the random forest 
-# will change depending on what model we use
-## normally has blue but for now has geen
-# TD1 = TD %>%
-#   select(-aerosol, -red, -blue, -SWIR2, -dissimilarity, - SAVI)
-# run the random forest model
-mod = Prepare_RF_Model(training_data)
+#Prepare RF Model using a single raster stack from the rast_4_RF_list
+rast_4_RF = rast_4_RF_list$LC08_L2SP_174039_20210320_20210328_02_T1
+training_data = CreateTrainingDF(rast_4_RF)
 
-# get names of cropped rasters
-tif_cropped = list.files(cropped_dir, pattern = "tif$")
+# Prepare the random forest model
+set.seed(12)
+RFmodel = Prepare_RF_Model(training_data)
 
-# to add to plots
-colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
-x = levels(TD$ground_type)
+# get list of names of cropped raster files
+tif_cropped = list.files(cropped_dir, pattern = "tif$",
+                         full.names = TRUE)
 
+#'---------------------------------
+#' Run classification
+#'---------------------------------
 # loop through the cropped raster's and classify them 
-
-classify_raster = lapply(tif_cropped, function(r){
-  print(paste0("cropped\\", r))
-  r_1 = rast(paste0("cropped\\", r))# load raster
-  r_1 = r_1[[bands]]
-  #plot(r_1)
-  classify_r = ApplyRFModel(all_rast_4_RF = r_1, fit = mod) # classify the raster
-  r_split <- strsplit(x=basename(r), split = ".", fixed = TRUE)
+classified_rasters = lapply(tif_cropped, function(t){
+  # The tif_cropped list already has full path to each file
+  r = rast(t)
+  r = r[[bands]]
+  #plot(r)
+  rast_classify = ApplyRFModel(r, fit = RFmodel) # classify the raster
+  r_split <- strsplit(x=basename(t), split = ".", fixed = TRUE)
   r_split <- unlist(r_split)[1]
-  rastname = paste( r_split, "classified", sep="_")
+  rastname = paste(r_split, "classified", sep="_")
   rastpath <- file.path(classified_dir, paste0(rastname, ".tif"))
-  plot(classify_r, col = colors, type = "classes", levels = x, main = paste(r, "classified"))
-  # writeRaster(x = classify_r, filename = rastpath, overwrite = TRUE ) # save the raster
-   return(classify_r)
-  #return(r_1)
+  writeRaster(x = rast_classify, filename = rastpath,
+              overwrite = TRUE)
+  
+  return(rast_classify)
 })
 
-#cheek 3, 12, 21
+PlotClassified(tif_cropped, classified_rasters)
 
 
+#'---------------------------------
+#' Land surface temperature
+#'---------------------------------
 LST_crop <- lapply(study_areas$name, function(sa){
   lapply(tif_dirs_full, function(d) {
     # Get list of TIF files in each dir

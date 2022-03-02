@@ -1,66 +1,64 @@
 
 # Random Forest functions based of of klils
 
-CropRast_4_RF <- function(landsat_dir){
-  # "landsat_dir" is input folder with the tifs to make the list
-  # take only the tifs with "_SR_" in name
-  # select bands to take
-  # create a raster stack with the wanted bands
-  # give the bands names by color/wavelength 
-  tif_list_RF = list.files(landsat_dir, pattern = "TIF$", full.names = TRUE)
-  tif_list_RF <- tif_list_RF[grep(pattern="_SR_", x=tif_list_RF)]
-  tif_list_RF <- tif_list_RF[grep(pattern = "B1|B2|B3|B4|B5|B6|B7",
-                                  x = tif_list_RF)]
-  # create terra::SpatRaster (stack)
-  tif_stk_RF <- rast(tif_list_RF)
-  names(tif_stk_RF) <- c("aerosol", "blue", "green", "red",
-                      "NIR", "SWIR1", "SWIR2") 
-  # load shpfile of classification area
-  classification_shp <- vect(file.path(GIS_dir, "greenhouses.gpkg"),
-                             layer="classification_area")
-  
-  # crop and mask the raster with the shpfile
-  crop_rast <- terra::crop(tif_stk_RF, rast_shp)
-  masked_rast <- terra::mask(crop_rast, rast_shp)
-  
-  return(masked_rast)
-}
-
-
-AddAllBands <- function(raster) {
-  # create glcm texture bands to the green band of the raster
-    # to use glcm the band raster need to be in raster format and not terra-rast
-  # texture bands are variance and second moment
-  # give the texture bands names
-  # create an NDVI band
-  # give it a name
-  texture = glcm(raster(raster$green), 
-                 statistics = c('variance','contrast','dissimilarity'), 
-                 na_opt = "ignore")
-  names(texture) <- c("variance", "contrast","dissimilarity") 
-  ndvi = (raster$NIR - raster$red)/(raster$NIR + raster$red)
-  names(ndvi) = "NDVI"
-  savi = 1.5*((raster$NIR - raster$red)/(raster$NIR + raster$red + 0.5))
-  names(savi) = "SAVI"
-  
-  # combine all the bands to 1 raster
-    # the texture bands need to be converted to terra-rast format
-  allbands <- c(raster, rast(texture), ndvi, savi)
-  #allbands <- c(raster, rast(texture), ndvi)
-  return(allbands)
-}
+# CropRast_4_RF <- function(landsat_dir){
+#   # "landsat_dir" is input folder with the tifs to make the list
+#   # take only the tifs with "_SR_" in name
+#   # select bands to take
+#   # create a raster stack with the wanted bands
+#   # give the bands names by color/wavelength 
+#   tif_list_RF = list.files(landsat_dir, pattern = "TIF$", full.names = TRUE)
+#   tif_list_RF <- tif_list_RF[grep(pattern="_SR_", x=tif_list_RF)]
+#   tif_list_RF <- tif_list_RF[grep(pattern = "B1|B2|B3|B4|B5|B6|B7",
+#                                   x = tif_list_RF)]
+#   # create terra::SpatRaster (stack)
+#   tif_stk_RF <- rast(tif_list_RF)
+#   names(tif_stk_RF) <- c("aerosol", "blue", "green", "red",
+#                       "NIR", "SWIR1", "SWIR2") 
+#   # load shpfile of classification area
+#   classification_shp <- vect(file.path(GIS_dir, "greenhouses.gpkg"),
+#                              layer="classification_area")
+#   
+#   # crop and mask the raster with the shpfile
+#   crop_rast <- terra::crop(tif_stk_RF, classification_shp)
+#   masked_rast <- terra::mask(crop_rast, classification_shp)
+#   
+#   return(masked_rast)
+# }
+# 
+# 
+# AddAllBands <- function(raster) {
+#   # create glcm texture bands to the green band of the raster
+#     # to use glcm the band raster need to be in raster format and not terra-rast
+#   # texture bands are variance and second moment
+#   # give the texture bands names
+#   # create an NDVI band
+#   # give it a name
+#   texture = glcm(raster(raster$green), 
+#                  statistics = c('variance','contrast','dissimilarity'), 
+#                  na_opt = "ignore")
+#   names(texture) <- c("variance", "contrast","dissimilarity") 
+#   ndvi = (raster$NIR - raster$red)/(raster$NIR + raster$red)
+#   names(ndvi) = "NDVI"
+#   savi = 1.5*((raster$NIR - raster$red)/(raster$NIR + raster$red + 0.5))
+#   names(savi) = "SAVI"
+#   
+#   # combine all the bands to 1 raster
+#     # the texture bands need to be converted to terra-rast format
+#   allbands <- c(raster, rast(texture), ndvi, savi)
+#   #allbands <- c(raster, rast(texture), ndvi)
+#   return(allbands)
+# }
 
 
 #' 
-CreateTrainingDF <- function(tif){
+CreateTrainingDF <- function(r){
   # "tif" is the chosen raster stack to be used *for training* 
   # load training data points from geopackage
   training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
                         layer="classification_points")
-  
-  # use extract to give each point the value of the pixel in each band
-  allbands <- rast(tif)
-  train_bands <- allbands[[bands]]# selects wanted bands to build the model
+  # selects wanted bands to build the model
+  train_bands <- r[[bands]]  
   extract_points = terra::extract(train_bands, training_data,
                                   method = "simple")
   
@@ -95,7 +93,6 @@ CreateTrainingDF <- function(tif){
   return(extract_points)
 }
 
-set.seed(12)
 Prepare_RF_Model <- function(training_data) {
   # Limit number of variables that will be tried in train()
   # To limit how many variable comgination are tried, We can set either:
@@ -175,57 +172,31 @@ Prepare_RF_Model <- function(training_data) {
 # rf_model2$results
 
 #it always crashes!!
-ApplyRFModel <- function(all_rast_4_RF, fit) {
+ApplyRFModel <- function(r, fit) {
   # Apply model to data.frame of original superpixels
-  # sp_predictors <- st_drop_geometry(superpixels) %>% 
-  #   subset(select = -c(supercells,x,y))
-  raster_predict <- terra::predict(object = all_rast_4_RF, model = fit,
+  r_predict <- terra::predict(object = r, model = fit,
                               factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
-                                          "Solar_Panels"))
-  # raster_predict <- factor(FC,
-  #              labels = c("FC", "bare_soil", "ring", "rock", "veg", "road"))
-  # sp_classified <- cbind(superpixels, FC)
+                                          "Solar_Panels"),
+                              na.rm = TRUE)
   # sp_classified_file <- file.path(Output_dir, "superpixels_classified.gpkg")
   # st_write(obj = sp_classified, dsn=sp_classified_file,
   #          layer = "superpixels_FC", append = FALSE, delete_layer = TRUE)
-  return(raster_predict)
+  return(r_predict)
 }
 
-#the same thing as above still crashes 
-#raster_predict = terra::predict(object = all_rast_4_RF, model = fit, fun = predict)
-
-# #load study area
-# area = st_read("GIS/area.shp")
-# #pick 1 of the study areasa
-# area1 = area[1,]
-# area2 = area[2,]
-# area3 = area[3,]
-# #crop raster to that area1
-# ein_yahav = terra::crop(raster1, area1)
-# hazeva = terra::crop(raster1, area2)
-# paran = terra::crop(raster1, area3)
-# #dark green house = gray
-# #ground = yellow
-# #light green house = cyan
-# #orchard = dark green
-# #solar panels = black
-# #water = blue
-# 
- #colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
-# x=levels(TD$ground_type)
-
-# 
-# plotRGB(hazeva, 5, 4,3)
-# plotRGB(ein_yahav, 5, 4,3)
-# plotRGB(paran, 5, 4,3)
-#plot(hazeva_c, col = col, type = "classes", levels = x)
-#plot(ein_yahav1, col = col, type = "classes", levels = x)
-# plot(paran_c, col = col,type = "classes", levels = x)
-
-#plot(hazeva5, col=col,type = "classes", levels = x)
-
-
-
-
-
-
+PlotClassified <- function(rast_list, classified_list) {
+  # to add to plots
+  colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+  par(mfrow = c(2,1))
+  lapply(seq_along(rast_list), function(i){
+    rst = rast(rast_list[[i]])
+    cls = classified_list[[i]]
+  
+    plotRGB(rst,
+            r=3, g=2, b=1, main="True color")
+    plot(cls,
+        col = colors,
+        main = "Classified")
+    #dev.off()
+  })
+}

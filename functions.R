@@ -2,10 +2,6 @@ CropDatasets <- function(tif_list, study_area) {
   # Read list of TIF files into stack
   # Crop to extent of testing polygons
   # ---------------------------
-  # TODO: 
-  # Define separate study areas for each Yishuv, 
-  # and do the cropping for each separately
-  # ---------------------------
   # Check whether L5 or L8
   
     if (length(grep(pattern = "LT05", tif_list, fixed = TRUE)) > 0) {
@@ -15,32 +11,25 @@ CropDatasets <- function(tif_list, study_area) {
       tif_list_05 <- tif_list_05[grep(pattern = "B1|B2|B3|B4|B5|B7",
                                       x = tif_list_05)]  
       tif_stk <- rast(tif_list_05)
-      #tif_stk <- stack(tif_list)
-      names(tif_stk) <- c("blue", "green", "red",
-                          "NIR", "SWIR1", "SWIR2")
     }
     else {
       #select wanted bands landsat 8
       tif_list_08 <- tif_list[grep(pattern="LC08_", x=tif_list)]
       tif_list_08 <- tif_list_08[grep(pattern="_SR_", x=tif_list_08)]
-      tif_list_08 <- tif_list_08[grep(pattern = "B1|B2|B3|B4|B5|B6|B7",
-                                      x = tif_list_08)] #do we need B1 - arisol 
+      # Do not use B1 (aerosol band)
+      tif_list_08 <- tif_list_08[grep(pattern = "B2|B3|B4|B5|B6|B7",
+                                      x = tif_list_08)]
       tif_stk <- rast(tif_list_08)
-      #tif_stk <- stack(tif_list)
-      names(tif_stk) <- c("aerosol", "blue", "green", "red",
-                          "NIR", "SWIR1", "SWIR2")
-  }
-  
-  #study_area = st_read("area.shp") # shape i made, can this be outside of the function
-  
+    }
+    
+  names(tif_stk) <- c("blue", "green", "red", "NIR", "SWIR1", "SWIR2")
   cropped <- terra::crop(tif_stk, study_area)
-  
   #' Check bounding box of raster stack and study area
   # (st_bbox(study_area))
   # (bbox(cropped))
-  
   return(cropped)
 }
+
 
 AddImageTexture <- function(cropped) {
   # Run glcm() function to create image texture raster
