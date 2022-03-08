@@ -24,6 +24,7 @@ CropDatasets <- function(tif_list, study_area) {
     
   names(tif_stk) <- c("blue", "green", "red", "NIR", "SWIR1", "SWIR2")
   cropped <- terra::crop(tif_stk, study_area)
+  cropped = terra::mask(cropped, study_area) # do we want mask for the classification area so its not so big?
   #' Check bounding box of raster stack and study area
   # (st_bbox(study_area))
   # (bbox(cropped))
