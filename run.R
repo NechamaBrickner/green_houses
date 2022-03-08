@@ -8,11 +8,17 @@ source("./rf_functions.R")
 t0 = Sys.time()
 print(paste(t0, "-- Begin process"))
 
-# not yet cuz i dont have the training data!
-# #' Load training polygons as sf object
-# classes <- LoadTrainingData()
+# Load study areas and Landsat tiles
+study_areas = st_read(file.path(GIS_dir, "greenhouses.gpkg"),
+                      layer="areas")
+# Get all Landsat folders in datasets_dir
+tif_dirs_full <- list.dirs(datasets_dir)[-1]
 
-# Work on each dataset  and study area separately
+
+#'---------------------------------
+#' Crop Landsat to study areas
+#'---------------------------------
+# Work on each Landsat dataset and study area separately
 crop_rasters <- lapply(study_areas$name, function(sa){
   lapply(tif_dirs_full, function(d) {
     # Get list of TIF files in each dir
@@ -29,78 +35,75 @@ crop_rasters <- lapply(study_areas$name, function(sa){
       cropped <- CropDatasets(tif_list, study_area)
       crop_all_layers <- AddImageTexture(cropped)
       
-      
-      #bands_tif_path <- AddImageTexture(cropped, d)
-      #segmentation <- Perform_Segmentation(crop_all_layers, d, sa)
-      
       #save the cropped images
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
       rastname = paste(sa, datestr, sep="_")
       rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
-      terra::writeRaster(x= crop_all_layers, filename = rastpath, overwrite = TRUE)
-     
+      terra::writeRaster(x= crop_all_layers,
+                         filename = rastpath, overwrite = TRUE)
+      
       return(crop_all_layers)
     }
   })
 })
 
-# Get a list of all segmentations,
-# one for each combination of date and study area
-#segmentations <- unlist(segmentations, recursive = FALSE)
+#'---------------------------------
+#' Random Forest classification
+#'---------------------------------
+# create rasters for classification
+# This list holds all raster bands to be used in classification
+# for all dates to be examined
+classification_shp <- vect(file.path(GIS_dir, "greenhouses.gpkg"),
+                           layer="classification_area")
+rast_4_RF_list = lapply(tif_dirs_full, function(td) {
+  # Mask to classification area
+  tif_list <- list.files(td, full.names = TRUE)
+  masked_raster <- CropDatasets(tif_list, classification_shp)
+  # add texture and veg index bands
+  all_bands <- AddImageTexture(masked_raster)
+  return(all_bands)
+})
+names(rast_4_RF_list) <- basename(tif_dirs_full)
+
+#Prepare RF Model using a single raster stack from the rast_4_RF_list
+rast_4_RF = rast_4_RF_list$LC08_L2SP_174039_20200418_20200822_02_T1
+training_data = CreateTrainingDF(rast_4_RF)
+
+# Prepare the random forest model
+set.seed(12)
+RFmodel = Prepare_RF_Model(training_data)
+
+# get list of names of cropped raster files
+tif_cropped = list.files(cropped_dir, pattern = "tif$",
+                         full.names = TRUE)
 
 #'---------------------------------
-#' Completed
+#' Run classification
 #'---------------------------------
-t2 = Sys.time()
-elapsed = round(difftime(t2, t0, units = "mins"),2)
-print(paste(t2, "-- End process in", elapsed, "minutes"))
-
-
-### random forest 
-# create raster for classification
-raster1 = load_rast_4_RF(rast_4_RF, rast_shp )
-# add texture and index bands
-raster1 = addallbands(raster = raster1)
-# create training data
-TD = create_td(training_data_RF, allbands = raster1)
-# delete columns not used in the random forest 
-# will change depending on what model we use
-## normally has blue but for now has geen
-# TD1 = TD %>%
-#   select(-aerosol, -red, -blue, -SWIR2, -dissimilarity, - SAVI)
-# run the random forest model
-mod = Prepare_RF_Model(training_data = TD)
-
-# get names of cropped raster's
-tif_cropped = list.files(cropped_dir)
-tif_cropped = tif_cropped[grep(pattern =".tif$", x=tif_cropped)]
-
-# to add to plots
-colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
-x = levels(TD$ground_type)
-
 # loop through the cropped raster's and classify them 
-
-classify_raster = lapply(tif_cropped, function(r){
-  print(paste0("cropped\\", r))
-  r_1 = rast(paste0("cropped\\", r))# load raster
-  r_1 = r_1[[bands]]
-  #plot(r_1)
-  classify_r = ApplyRFModel(all_rast_4_RF = r_1, fit = mod) # classify the raster
-  r_split <- strsplit(x=basename(r), split = ".", fixed = TRUE)
+classified_rasters = lapply(tif_cropped, function(t){
+  # The tif_cropped list already has full path to each file
+  r = rast(t)
+  r = r[[bands]]
+  #plot(r)
+  rast_classify = ApplyRFModel(r, fit = RFmodel) # classify the raster
+  r_split <- strsplit(x=basename(t), split = ".", fixed = TRUE)
   r_split <- unlist(r_split)[1]
-  rastname = paste( r_split, "classified", sep="_")
+  rastname = paste(r_split, "classified", sep="_")
   rastpath <- file.path(classified_dir, paste0(rastname, ".tif"))
-  plot(classify_r, col = colors, type = "classes", levels = x, main = paste(r, "classified"))
-  # writeRaster(x = classify_r, filename = rastpath, overwrite = TRUE ) # save the raster
-   return(classify_r)
-  #return(r_1)
+  writeRaster(x = rast_classify, filename = rastpath,
+              overwrite = TRUE)
+  
+  return(rast_classify)
 })
 
-#cheek 3, 12, 21
+PlotClassified(tif_cropped, classified_rasters)
 
 
+#'---------------------------------
+#' Land surface temperature
+#'---------------------------------
 LST_crop <- lapply(study_areas$name, function(sa){
   lapply(tif_dirs_full, function(d) {
     # Get list of TIF files in each dir
@@ -113,7 +116,7 @@ LST_crop <- lapply(study_areas$name, function(sa){
       study_area <- study_areas[study_areas$name == sa,]
       LST_b <- LST_band(tif_list, study_area)
       #print(range(LST_b))
-     
+      
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
       rastname = paste("LST", sa, datestr, sep="_")
@@ -127,6 +130,12 @@ LST_crop <- lapply(study_areas$name, function(sa){
 })
 
 
+#'---------------------------------
+#' Completed
+#'---------------------------------
+t2 = Sys.time()
+elapsed = round(difftime(t2, t0, units = "mins"),2)
+print(paste(t2, "-- End process in", elapsed, "minutes"))
 
 
 
