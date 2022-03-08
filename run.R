@@ -67,7 +67,7 @@ rast_4_RF_list = lapply(tif_dirs_full, function(td) {
 names(rast_4_RF_list) <- basename(tif_dirs_full)
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
-rast_4_RF = rast_4_RF_list$LC08_L2SP_174039_20210320_20210328_02_T1
+rast_4_RF = rast_4_RF_list$LC08_L2SP_174039_20200418_20200822_02_T1
 training_data = CreateTrainingDF(rast_4_RF)
 
 # Prepare the random forest model
