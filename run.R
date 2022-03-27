@@ -9,65 +9,48 @@ t0 = Sys.time()
 print(paste(t0, "-- Begin process"))
 
 # Load study areas and Landsat tiles
-study_areas = st_read(file.path(GIS_dir, "greenhouses.gpkg"),
-                      layer="areas")
+full_area = vect(file.path(GIS_dir, "greenhouses.gpkg"),
+                      layer="classification_area")
 # Get all Landsat folders in datasets_dir
 tif_dirs_full <- list.dirs(datasets_dir)[-1]
 
 
 #'---------------------------------
-#' Crop Landsat to study areas
+#' Crop Landsat to full area
 #'---------------------------------
-# Work on each Landsat dataset and study area separately
-crop_rasters <- lapply(study_areas$name, function(sa){
-  lapply(tif_dirs_full, function(d) {
+# Work on each Landsat dataset separately
+crop_rasters <- lapply(tif_dirs_full, function(d) {
     # Get list of TIF files in each dir
-    # Read into stack, and crop
     tif_list = list.files(d, pattern = "TIF$",
                           full.names = TRUE, recursive = TRUE)
     if (length(tif_list) > 0) {
       # pass both list of tif files, and containing directory to the cropping function
       # The directory name will be used to name the new, cropped tif file
       # 
-      print(paste("In:", sa, "directory:", d))
-      #print(paste0(sa,"_", tif_dirs_full, ".tif")) # can be name of raster?
-      study_area <- study_areas[study_areas$name == sa,]
-      cropped <- CropDatasets(tif_list, study_area)
+      cropped <- CropDatasets(tif_list, full_area)
       crop_all_layers <- AddImageTexture(cropped)
       
       #save the cropped images
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
-      rastname = paste(sa, datestr, sep="_")
+      rastname = paste("full_area", datestr, sep="_")
       rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= crop_all_layers,
                          filename = rastpath, overwrite = TRUE)
      
       return(crop_all_layers)
     }
-  })
 })
 
 #'---------------------------------
 #' Random Forest classification
 #'---------------------------------
-# create rasters for classification
-# This list holds all raster bands to be used in classification
-# for all dates to be examined
-classification_shp <- vect(file.path(GIS_dir, "greenhouses.gpkg"),
-                           layer="classification_area")
-rast_4_RF_list = lapply(tif_dirs_full, function(td) {
-  # Mask to classification area
-  tif_list <- list.files(td, full.names = TRUE)
-  masked_raster <- CropDatasets(tif_list, classification_shp)
-  # add texture and veg index bands
-  all_bands <- AddImageTexture(masked_raster)
-  return(all_bands)
-  })
-names(rast_4_RF_list) <- basename(tif_dirs_full)
+# crop_rasters list holds *all* dates with 9 bands each
+# Select only 1 for RF
+names(crop_rasters) <- basename(tif_dirs_full)
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
-rast_4_RF = rast_4_RF_list$LC08_L2SP_174039_20200418_20200822_02_T1
+rast_4_RF = crop_rasters$LC08_L1TP_174039_20200214_20200823_02_T1
 training_data = CreateTrainingDF(rast_4_RF)
 
 # Prepare the random forest model

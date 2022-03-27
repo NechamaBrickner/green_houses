@@ -1,3 +1,38 @@
+DownloadLandsat <- function(area, date_ranges_file){
+
+  #----------------------
+  # This is not working! 
+  #----------------------
+
+  # Configs for getSpatialData
+  #
+  set_aoi(as_Spatial(area))
+  set_archive(dataset_dir)
+  # Login credentials prepared in advance, and saved to RDS file
+  creds <- readRDS("credentials.rds")
+  login_USGS(username=creds$username, password=creds$passwd)
+  date_ranges <- read.csv("date_ranges.csv")
+  tif_dir_list <- lapply(1:nrow(date_ranges), function(r){
+                       from_date = as.character(date_ranges[r,1])
+                       to_date = as.character(date_ranges[r, 2])
+                       time_range=c(from_date, to_date)
+                       rec8 = getLandsat_records(time_range=time_range,
+                           products = c("landsat_8_c1"),
+                       )
+                       if (length(rec8) != 0) {
+                           getLandsat_data(rec8)
+                       }
+                      rec5 = getLandsat_records(time_range,
+                           products = c("landsat_tm_c2_l1")
+                       )
+                      if (length(rec5) != 0) {
+                          getLandat_data(rec5)
+                      }
+  })
+}
+
+
+
 CropDatasets <- function(tif_list, study_area) {
   # Read list of TIF files into stack
   # Crop to extent of testing polygons
@@ -7,20 +42,19 @@ CropDatasets <- function(tif_list, study_area) {
     if (length(grep(pattern = "LT05", tif_list, fixed = TRUE)) > 0) {
       #select wanted bands landsat 5
       tif_list_05 <- tif_list[grep(pattern="LT05_", x=tif_list)]
-      tif_list_05 <- tif_list_05[grep(pattern="_SR_", x=tif_list_05)]
+      #tif_list_05 <- tif_list_05[grep(pattern="_SR_", x=tif_list_05)]
       tif_list_05 <- tif_list_05[grep(pattern = "B1|B2|B3|B4|B5|B7",
                                       x = tif_list_05)]  
       tif_stk <- rast(tif_list_05)
-    }
-    else {
+    } else {
       #select wanted bands landsat 8
       tif_list_08 <- tif_list[grep(pattern="LC08_", x=tif_list)]
-      tif_list_08 <- tif_list_08[grep(pattern="_SR_", x=tif_list_08)]
+      #tif_list_08 <- tif_list_08[grep(pattern="_SR_", x=tif_list_08)]
       # Do not use B1 (aerosol band)
       tif_list_08 <- tif_list_08[grep(pattern = "B2|B3|B4|B5|B6|B7",
                                       x = tif_list_08)]
       tif_stk <- rast(tif_list_08)
-    }
+   }
     
   names(tif_stk) <- c("blue", "green", "red", "NIR", "SWIR1", "SWIR2")
   cropped <- terra::crop(tif_stk, study_area)

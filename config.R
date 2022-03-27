@@ -1,6 +1,6 @@
 # Install and load packages
 pkg_list = c(
-  #"getSpatialData",  # download Landsat tiles
+  "getSpatialData",  # download Landsat tiles
   "terra", "raster", # read rasters
   "sf",              # vector layers
   "parallel",        # parallel processing
@@ -33,6 +33,8 @@ lapply(pkg_list, library, character.only = TRUE)
 
 # creates folder Paths
 # -------------------------
+# Setup individually depending on local paths in each computer
+
 GIS_dir = "./GIS"
 if (!dir.exists(GIS_dir)) {
   dir.create(GIS_dir)
@@ -71,3 +73,4 @@ if (!dir.exists(classified_dir)) {
 
 # Bands to be used in the RF model
 bands=c("green","NIR","SWIR1", "variance", "contrast", "NDVI")
+
