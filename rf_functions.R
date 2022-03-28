@@ -60,7 +60,12 @@ CreateTrainingDF <- function(r){
   # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
   #                       layer="classification_points")
   
-  training_data = vect("GIS\\classification_points1n.shp")
+
+
+  # "tif" is the chosen raster stack to be used *for training* 
+  # load training data points from geopackage
+  training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
+                        layer="classification_points")
   # selects wanted bands to build the model
   train_bands <- r[[bands]]  
   extract_points = terra::extract(train_bands, training_data,
@@ -178,13 +183,18 @@ Prepare_RF_Model <- function(training_data) {
 #it always crashes!!
 ApplyRFModel <- function(r, fit) {
   # Apply model to data.frame of original superpixels
+
   # r_predict <- terra::predict(object = r, model = fit,
   #                             factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
   #                                         "Solar_Panels"),
   #                             na.rm = TRUE)
+  #r_predict <- terra::predict(object = r, model = fit,
+                             # factors = c("Water", "Orchard", "Ground", "ground_d", "Light_Green_House", 
+                                          #"Dark_Green_House"),
+
   r_predict <- terra::predict(object = r, model = fit,
-                              factors = c("Water", "Orchard", "Ground", "ground_d", "Light_Green_House", 
-                                          "Dark_Green_House"),
+                              factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
+                                          "Solar_Panels"),
                               na.rm = TRUE)
   # sp_classified_file <- file.path(Output_dir, "superpixels_classified.gpkg")
   # st_write(obj = sp_classified, dsn=sp_classified_file,
@@ -194,8 +204,11 @@ ApplyRFModel <- function(r, fit) {
 
 PlotClassified <- function(rast_list, classified_list) {
   # to add to plots
+
   #colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
-  colors = c("gray", "yellow","yellow", "cyan", "dark green", "blue")
+  #colors = c("gray", "yellow","yellow", "cyan", "dark green", "blue")
+  colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+
   par(mfrow = c(2,1))
   lapply(seq_along(rast_list), function(i){
     rst = rast(rast_list[[i]])

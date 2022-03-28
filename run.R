@@ -42,7 +42,7 @@ crop_rasters <- lapply(study_areas$name, function(sa){
       rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= crop_all_layers,
                          filename = rastpath, overwrite = TRUE)
-      
+
       return(crop_all_layers)
     }
   })
@@ -64,6 +64,7 @@ rast_4_RF_list = lapply(tif_dirs_full, function(td) {
   all_bands <- AddImageTexture(masked_raster)
   return(all_bands)
 })
+
 names(rast_4_RF_list) <- basename(tif_dirs_full)
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list

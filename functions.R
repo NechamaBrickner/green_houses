@@ -30,6 +30,7 @@ CropDatasets <- function(tif_list, study_area) {
   return(cropped)
 }
 
+
 AddImageTexture <- function(cropped) {
   # Run glcm() function to create image texture raster
   # Choose one band for glcm, i.e. green
@@ -73,21 +74,17 @@ LST_band = function(tif_list, study_area) {
     LST_05 <- LST_05[grep(pattern="ST", x = LST_05)]
     LST_05 <- LST_05[grep(pattern = "B6", x = LST_05)]  
     LST <- rast(LST_05)
-    names(LST) <- "LST"
   }
-  
   else {
     #select thermal band landsat 8 - B10
     LST_08 <- tif_list[grep(pattern="LC08_", x=tif_list)]
     LST_08 <- LST_08[grep(pattern="ST", x=LST_08)]
     LST_08 <- LST_08[grep(pattern = "B10", x = LST_08)] 
     LST <- rast(LST_08)
-    names(LST) <- "LST"
   }
-  
+  names(LST) <- "LST"
   cropped <- crop(LST, study_area)
   cropped = cropped*0.00341802+149.0-272.15
  
-   return(cropped)
-  
+  return(cropped)
 }
