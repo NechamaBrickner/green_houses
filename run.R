@@ -50,7 +50,8 @@ crop_rasters <- lapply(tif_dirs_full, function(d) {
 names(crop_rasters) <- basename(tif_dirs_full)
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
-rast_4_RF = crop_rasters$LC08_L1TP_174039_20200214_20200823_02_T1
+# the image is from 18_04_2020 
+rast_4_RF = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
 training_data = CreateTrainingDF(rast_4_RF)
 
 # Prepare the random forest model
@@ -60,6 +61,7 @@ RFmodel = Prepare_RF_Model(training_data)
 # get list of names of cropped raster files
 tif_cropped = list.files(cropped_dir, pattern = "tif$",
                          full.names = TRUE)
+tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only the full area
 
 #'---------------------------------
 #' Run classification
