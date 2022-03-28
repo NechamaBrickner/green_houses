@@ -55,8 +55,19 @@
 CreateTrainingDF <- function(r){
   # "tif" is the chosen raster stack to be used *for training* 
   # load training data points from geopackage
+  
+  # original points 
+  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
+  #                       layer="classification_points")
+  
+  # #uses new layer
+  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
+  #                       layer="classification_points1n")
+  
+  #uses new layer2
   training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-                        layer="classification_points")
+                        layer="cp2")
+  
   # selects wanted bands to build the model
   train_bands <- r[[bands]]  
   extract_points = terra::extract(train_bands, training_data,
@@ -173,11 +184,25 @@ Prepare_RF_Model <- function(training_data) {
 
 #it always crashes!!
 ApplyRFModel <- function(r, fit) {
-  # Apply model to data.frame of original superpixels
+  # Apply model to rasters
+  
+  # r_predict <- terra::predict(object = r, model = fit,
+  #                             factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
+  #                                         "Solar_Panels"),
+  #                             na.rm = TRUE)
+  
+  # #pridict fr the new point layer without solar panels with ground_d
+  # r_predict <- terra::predict(object = r, model = fit,
+  #                             factors = c("Water", "Orchard", "Ground", "ground_d", "Light_Green_House", 
+  #                                         "Dark_Green_House"),
+  #                             na.rm = TRUE)
+  
+  #pridict fr the new point layer without solar panels with ground_d
   r_predict <- terra::predict(object = r, model = fit,
-                              factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
-                                          "Solar_Panels"),
-                              na.rm = TRUE)
+                              factors = c("Water", "Orchard", "Ground", "Light_Green_House", 
+                                          "Dark_Green_House"),
+                              na.rm = TRUE) 
+  
   # sp_classified_file <- file.path(Output_dir, "superpixels_classified.gpkg")
   # st_write(obj = sp_classified, dsn=sp_classified_file,
   #          layer = "superpixels_FC", append = FALSE, delete_layer = TRUE)
