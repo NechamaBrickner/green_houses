@@ -212,13 +212,15 @@ ApplyRFModel <- function(r, fit) {
 PlotClassified <- function(rast_list, classified_list) {
   # to add to plots
   colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+  colors = c("gray", "yellow", "cyan", "dark green", "blue")
   par(mfrow = c(2,1))
   lapply(seq_along(rast_list), function(i){
     rst = rast(rast_list[[i]])
     cls = classified_list[[i]]
   
-    plotRGB(rst,
-            r=3, g=2, b=1, main="True color")
+    # plotRGB(rst,
+    #         r=3, g=2, b=1, main="True color")
+    plot(rst$green)
     plot(cls,
         col = colors,
         main = "Classified")
