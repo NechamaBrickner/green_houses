@@ -101,7 +101,7 @@ LST_crop <- lapply(study_areas$name, function(sa){
       study_area <- study_areas[study_areas$name == sa,]
       LST_b <- LST_band(tif_list, study_area)
       #print(range(LST_b))
-     
+
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
       rastname = paste("LST", sa, datestr, sep="_")
