@@ -119,7 +119,10 @@ LST_band = function(tif_list, study_area) {
   }
   names(LST) <- "LST"
   cropped <- crop(LST, study_area)
-  cropped = cropped*0.00341802+149.0-272.15
+  #rescale factor
+  # landsat 8 https://prd-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/atoms/files/LSDS-1619_Landsat-8-Collection2_Level-2_Science-Product-Guide-v3.pdf
+  # landsat 5 https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/LSDS-1618_Landsat-4-7_C2-L2-ScienceProductGuide-v4.pdf
+  cropped = cropped*0.00341802+149.0-272.15 
  
   return(cropped)
 }
