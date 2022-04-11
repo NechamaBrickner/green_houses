@@ -62,6 +62,11 @@ CropDatasets <- function(tif_list, study_area) {
   #' Check bounding box of raster stack and study area
   # (st_bbox(study_area))
   # (bbox(cropped))
+  
+  #rescale factor for refletacne 
+  # landsat 8 https://prd-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/atoms/files/LSDS-1619_Landsat-8-Collection2_Level-2_Science-Product-Guide-v3.pdf
+  # landsat 5 https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/LSDS-1618_Landsat-4-7_C2-L2-ScienceProductGuide-v4.pdf
+  cropped = cropped*0.0000275 - 0.2
   return(cropped)
 }
 
@@ -78,10 +83,15 @@ AddImageTexture <- function(cropped) {
   # Do we want also an NDVI band?
   ndvi <- ((cropped$NIR - cropped$red) / (cropped$NIR + cropped$red))
   names(ndvi) <- "NDVI"
+  #add water index??
+  WI1 <- 4*(cropped$green - cropped$SWIR1) - (0.25*cropped$NIR + 2.75*cropped$SWIR2)
+  names(WI1) <- "WI1"
+  WI2 <- cropped$blue + 2.5*cropped$green - 1.5*(cropped$NIR + cropped$SWIR1) - 0.25*cropped$SWIR2
+  names(WI2) <- "WI2"
   # -------------------------------
   # Add to "cropped"
   # Convert texture bands back to terra "SpatRaster"
-  all_layers <- c(cropped, rast(texture), ndvi)
+  all_layers <- c(cropped, rast(texture), ndvi, WI1, WI2)
  
   return(all_layers)
 }
@@ -119,7 +129,7 @@ LST_band = function(tif_list, study_area) {
   }
   names(LST) <- "LST"
   cropped <- crop(LST, study_area)
-  #rescale factor
+  #rescale factor for theral band
   # landsat 8 https://prd-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/atoms/files/LSDS-1619_Landsat-8-Collection2_Level-2_Science-Product-Guide-v3.pdf
   # landsat 5 https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/LSDS-1618_Landsat-4-7_C2-L2-ScienceProductGuide-v4.pdf
   cropped = cropped*0.00341802+149.0-272.15 
