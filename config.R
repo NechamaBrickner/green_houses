@@ -73,4 +73,4 @@ if (!dir.exists(classified_dir)) {
 
 # Bands to be used in the RF model
 bands=c("green","NIR","SWIR1", "variance", "contrast", "NDVI")
-#bands=c("blue","NIR","SWIR1", "variance", "contrast", "NDVI")
+#bands=c("blue", "NIR","SWIR1", "variance", "contrast", "NDVI")
