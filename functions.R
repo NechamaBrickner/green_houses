@@ -84,14 +84,15 @@ AddImageTexture <- function(cropped) {
   ndvi <- ((cropped$NIR - cropped$red) / (cropped$NIR + cropped$red))
   names(ndvi) <- "NDVI"
   #add water index??
-  WI1 <- 4*(cropped$green - cropped$SWIR1) - (0.25*cropped$NIR + 2.75*cropped$SWIR2)
-  names(WI1) <- "WI1"
-  WI2 <- cropped$blue + 2.5*cropped$green - 1.5*(cropped$NIR + cropped$SWIR1) - 0.25*cropped$SWIR2
-  names(WI2) <- "WI2"
+  # WI1 <- 4*(cropped$green - cropped$SWIR1) - (0.25*cropped$NIR + 2.75*cropped$SWIR2)
+  # names(WI1) <- "WI1"
+  # WI2 <- cropped$blue + 2.5*cropped$green - 1.5*(cropped$NIR + cropped$SWIR1) - 0.25*cropped$SWIR2
+  # names(WI2) <- "WI2"
   # -------------------------------
   # Add to "cropped"
   # Convert texture bands back to terra "SpatRaster"
-  all_layers <- c(cropped, rast(texture), ndvi, WI1, WI2)
+  all_layers <- c(cropped, rast(texture), ndvi)
+  #all_layers <- c(cropped, rast(texture), ndvi, WI1, WI2)
  
   return(all_layers)
 }
