@@ -65,8 +65,11 @@ CreateTrainingDF <- function(r){
   #                       layer="classification_points1n")
   
   #uses new layer2
-  training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-                        layer="cp2")
+  training_data = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
+                          layer="cp2")
+  training_data = training_data %>%
+    filter(Ground_Typ != "Water")
+  training_data <- vect(training_data)
   
   # selects wanted bands to build the model
   train_bands <- r[[bands]]  
@@ -199,7 +202,7 @@ ApplyRFModel <- function(r, fit) {
   
   #pridict fr the new point layer without solar panels with ground_d
   r_predict <- terra::predict(object = r, model = fit,
-                              factors = c("Water", "Orchard", "Ground", "Light_Green_House", 
+                              factors = c("Orchard", "Ground", "Light_Green_House", 
                                           "Dark_Green_House"),
                               na.rm = TRUE) 
   
