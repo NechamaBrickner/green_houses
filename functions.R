@@ -137,3 +137,9 @@ LST_band = function(tif_list, study_area) {
  
   return(cropped)
 }
+
+
+albedo_band = function(cropped) {
+  albedo = (cropped$blue*0.356 + cropped$red*0.13 + cropped$NIR*0.373 + cropped$SWIR1*0.085+ cropped$SWIR2*0.072 - 0.0018)/1.016
+  return(albedo)
+}
