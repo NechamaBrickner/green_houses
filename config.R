@@ -65,6 +65,12 @@ if (!dir.exists(LST_dir)) {
   dir.create(LST_dir)
 }
 
+# folder for  LST output
+albedo_dir = "./output/albedo"
+if (!dir.exists(albedo_dir)) {
+  dir.create(albedo_dir)
+}
+
 # folder for classified raster's output
 classified_dir = "./output/Classified"
 if (!dir.exists(classified_dir)) {
