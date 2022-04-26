@@ -41,13 +41,13 @@ crop_rasters <- lapply(tif_dirs_full, function(d) {
       return(crop_all_layers)
     }
 })
-
+names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by the date...
 #'---------------------------------
 #' Random Forest classification
 #'---------------------------------
 # crop_rasters list holds *all* dates with 9 bands each
 # Select only 1 for RF
-names(crop_rasters) <- basename(tif_dirs_full)
+
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
 # the image is from 18_04_2020 
@@ -84,6 +84,23 @@ classified_rasters = lapply(tif_cropped, function(t){
 })
 
 PlotClassified(tif_cropped, classified_rasters)
+
+
+#'---------------------------------
+#' albedo band
+#'---------------------------------
+albedo = lapply(tif_cropped, function(t){
+  r = rast(t)
+  albedo_b = albedo_band(cropped = r)
+  d_split <- strsplit(x=basename(t), split = "_", fixed = TRUE)
+  datestr <- unlist(d_split)[3]
+  rastname = paste("full_area_albedo", datestr, sep="_")
+  rastpath <- file.path(albedo_dir, paste0(rastname, ".tif"))
+  terra::writeRaster(x= albedo_b, filename = rastpath, overwrite = TRUE)
+  plot(albedo_b, main = rastname)
+  
+  return(albedo_b)
+})
 
 
 #'---------------------------------
