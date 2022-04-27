@@ -41,6 +41,7 @@ crop_rasters <- lapply(tif_dirs_full, function(d) {
       return(crop_all_layers)
     }
 })
+
 names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by the date...
 #'---------------------------------
 #' Random Forest classification
@@ -89,7 +90,7 @@ PlotClassified(tif_cropped, classified_rasters)
 # get list of names of classified raster files
 tif_classified = list.files(classified_dir, pattern = "tif$",
                          full.names = TRUE)
-tif_classified <- tif_classified[grep(pattern = "classifiedscaled", x = tif_classified)]  #takes only... by pattern
+tif_classified <- tif_classified[grep(pattern = "classified", x = tif_classified)]  #takes only... by pattern
 
 
 #'---------------------------------
@@ -123,7 +124,7 @@ LST_crop <- lapply(tif_dirs_full, function(d) {
 
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
-      rastname = paste("LST", datestr, sep="_")
+      rastname = paste("LST", datestr, "full_area", sep="_")
       rastpath <- file.path(LST_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= LST_b, filename = rastpath, overwrite = TRUE)
       plot(LST_b, main = paste(rastname, "C", sep = " "))
@@ -132,6 +133,45 @@ LST_crop <- lapply(tif_dirs_full, function(d) {
     }
   })
 
+buffer500 = vect(file.path(GIS_dir, "greenhouses.gpkg"),
+                 layer="area_buffer500_detailed")
+yishuv_mask = vect(file.path(GIS_dir, "greenhouses.gpkg"),
+                   layer="yishuv_mask")
+
+#loop to crop the classified images to the study area and mask out the yishuv
+crop_classified_rasters <- lapply(buffer500$name, function(sa){
+  lapply(tif_classified, function(t) {
+    r = rast(t)
+    yishuv_mask_r = rasterize(yishuv_mask, r) #rasterizes the yishuv and othe polygons
+    yishuv_mask_r[yishuv_mask_r ==1] = -999 # changes the polygon value to -999
+    print(paste("In:", sa, "directory:", t))
+    study_area <- buffer500[buffer500$name == sa,]
+    #crop and mask to yishuv out line
+    cropped <- terra::crop(r, study_area)
+    masked = terra::mask(r, study_area)
+    classified_mask = terra::mask(masked, yishuv_mask_r, maskvalues = -999)#maskes the area of the yishuv, makes the the raster size bigger with NA's  
+    #save the cropped images
+    d_split <- strsplit(x=basename(t), split = "_", fixed = TRUE)
+    datestr <- unlist(d_split)[3]
+    rastname = paste(sa, datestr,"classified", sep="_")
+    rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
+    terra::writeRaster(x= classified_mask,
+                       filename = rastpath, overwrite = TRUE)
+    plot(classified_mask, main = rastname)
+    return(classified_mask)
+  })
+})
+
+
+tif_crop_classified = list.files(cropped_dir, pattern = "tif$",
+                                 full.names = TRUE)
+tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)]  #takes only... by pattern
+
+frequency_table = lapply(tif_crop_classified, function(t){
+  r = rast(t)
+  ft = freq(r)
+  return(ft)
+})
 
 #'---------------------------------
 #' Completed
