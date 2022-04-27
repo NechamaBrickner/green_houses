@@ -61,7 +61,7 @@ RFmodel = Prepare_RF_Model(training_data)
 # get list of names of cropped raster files
 tif_cropped = list.files(cropped_dir, pattern = "tif$",
                          full.names = TRUE)
-tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only the full area
+tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only ... by pattern
 
 #'---------------------------------
 #' Run classification
@@ -86,6 +86,10 @@ classified_rasters = lapply(tif_cropped, function(t){
 PlotClassified(tif_cropped, classified_rasters)
 
 
+# get list of names of classified raster files
+tif_classified = list.files(classified_dir, pattern = "tif$",
+                         full.names = TRUE)
+tif_classified <- tif_classified[grep(pattern = "classifiedscaled", x = tif_classified)]  #takes only... by pattern
 #'---------------------------------
 #' albedo band
 #'---------------------------------
