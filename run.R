@@ -173,6 +173,14 @@ frequency_table = lapply(tif_crop_classified, function(t){
   return(ft)
 })
 
+names(frequency_table) <- basename(tif_crop_classified)
+
+# frequency_table = sapply(tif_crop_classified, function(t){
+#   r = rast(t)
+#   ft = freq(r)
+#   return(ft)
+# })
+
 #'---------------------------------
 #' Completed
 #'---------------------------------
