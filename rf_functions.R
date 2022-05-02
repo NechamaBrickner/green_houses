@@ -51,22 +51,11 @@
 # }
 
 
-#' 
-CreateTrainingDF <- function(r){
+
+CreateTrainingDF <- function(r, training_data){
   # "tif" is the chosen raster stack to be used *for training* 
-  # load training data points from geopackage
-  
-  # original points 
-  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-  #                       layer="classification_points")
-  
-  # #uses new layer
-  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-  #                       layer="classification_points1n")
-  
-  #uses new layer2
-  training_data = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
-                          layer="cp2")
+  # takes training data points from a layer
+
   training_data = training_data %>%
     filter(Ground_Typ != "Water")
   training_data <- vect(training_data)
