@@ -33,6 +33,7 @@ crop_rasters <- lapply(tif_dirs_full, function(d) {
       #save the cropped images
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
+      datestr = paste(substring(datestr, 1, 4), substring(datestr, 5, 6), substring(datestr, 7,8), sep = "_")
       rastname = paste("full_area", datestr, sep="_")
       rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= crop_all_layers,
@@ -52,17 +53,29 @@ names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by t
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
 # the image is from 18_04_2020 
-rast_4_RF = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
-training_data = CreateTrainingDF(rast_4_RF)
+
+training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
+                           layer="cp2")
+training_data_l5 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
+                           layer="cp_L5")
+rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
+rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
+training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5)
+training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8 )
+
 
 # Prepare the random forest model
 set.seed(12)
-RFmodel = Prepare_RF_Model(training_data)
+RFmodel = Prepare_RF_Model(training_data = training_data_L8)
 
 # get list of names of cropped raster files
 tif_cropped = list.files(cropped_dir, pattern = "tif$",
                          full.names = TRUE)
 tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only ... by pattern
+
+#need to make 2 list of cropped images by landsat to classifiy with the corect model
+# tif_cropped_l5
+# tif_cropped_l8
 
 #'---------------------------------
 #' Run classification
@@ -99,9 +112,9 @@ tif_classified <- tif_classified[grep(pattern = "classified", x = tif_classified
 albedo = lapply(tif_cropped, function(t){
   r = rast(t)
   albedo_b = albedo_band(cropped = r)
-  d_split <- strsplit(x=basename(t), split = "_", fixed = TRUE)
-  datestr <- unlist(d_split)[3]
-  rastname = paste("full_area_albedo", datestr, sep="_")
+  d_split <- strsplit(x=basename(t), split = ".", fixed = TRUE)
+  datestr <- unlist(d_split)[1]
+  rastname = paste("albedo", datestr, sep="_")
   rastpath <- file.path(albedo_dir, paste0(rastname, ".tif"))
   terra::writeRaster(x= albedo_b, filename = rastpath, overwrite = TRUE)
   plot(albedo_b, main = rastname)
@@ -124,6 +137,7 @@ LST_crop <- lapply(tif_dirs_full, function(d) {
 
       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
       datestr <- unlist(d_split)[4]
+      datestr = paste(substring(datestr, 1, 4), substring(datestr, 5, 6), substring(datestr, 7,8), sep = "_")
       rastname = paste("LST", datestr, "full_area", sep="_")
       rastpath <- file.path(LST_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= LST_b, filename = rastpath, overwrite = TRUE)
