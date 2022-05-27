@@ -65,6 +65,12 @@ if (!dir.exists(LST_dir)) {
   dir.create(LST_dir)
 }
 
+# folder for  LST output
+albedo_dir = "./output/albedo"
+if (!dir.exists(albedo_dir)) {
+  dir.create(albedo_dir)
+}
+
 # folder for classified raster's output
 classified_dir = "./output/Classified"
 if (!dir.exists(classified_dir)) {
@@ -73,4 +79,4 @@ if (!dir.exists(classified_dir)) {
 
 # Bands to be used in the RF model
 bands=c("green","NIR","SWIR1", "variance", "contrast", "NDVI")
-
+#bands=c("blue", "NIR","SWIR1", "variance", "contrast", "NDVI")

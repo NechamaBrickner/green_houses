@@ -51,22 +51,14 @@
 # }
 
 
-#' 
-CreateTrainingDF <- function(r){
+
+CreateTrainingDF <- function(r, training_data){
   # "tif" is the chosen raster stack to be used *for training* 
-  # load training data points from geopackage
-  
-  # original points 
-  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-  #                       layer="classification_points")
-  
-  # #uses new layer
-  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-  #                       layer="classification_points1n")
-  
-  #uses new layer2
-  training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-                        layer="cp2")
+  # takes training data points from a layer
+
+  training_data = training_data %>%
+    filter(Ground_Typ != "Water")
+  training_data <- vect(training_data)
   
   # selects wanted bands to build the model
   train_bands <- r[[bands]]  
@@ -199,7 +191,7 @@ ApplyRFModel <- function(r, fit) {
   
   #pridict fr the new point layer without solar panels with ground_d
   r_predict <- terra::predict(object = r, model = fit,
-                              factors = c("Water", "Orchard", "Ground", "Light_Green_House", 
+                              factors = c("Orchard", "Ground", "Light_Green_House", 
                                           "Dark_Green_House"),
                               na.rm = TRUE) 
   
@@ -212,13 +204,15 @@ ApplyRFModel <- function(r, fit) {
 PlotClassified <- function(rast_list, classified_list) {
   # to add to plots
   colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+  colors = c("gray", "yellow", "cyan", "dark green", "blue")
   par(mfrow = c(2,1))
   lapply(seq_along(rast_list), function(i){
     rst = rast(rast_list[[i]])
     cls = classified_list[[i]]
   
-    plotRGB(rst,
-            r=3, g=2, b=1, main="True color")
+    # plotRGB(rst,
+    #         r=3, g=2, b=1, main="True color")
+    plot(rst$green)
     plot(cls,
         col = colors,
         main = "Classified")
