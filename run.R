@@ -71,6 +71,24 @@ names(rast_4_RF_list) <- basename(tif_dirs_full)
 rast_4_RF = rast_4_RF_list$LC08_L2SP_174039_20200418_20200822_02_T1
 training_data = CreateTrainingDF(rast_4_RF)
 
+#'---------------------------------
+#' Monte Carlo Simulation
+#'---------------------------------
+# Do multiple runs of Random Forest, each time with different training/test sets
+
+num_mc_runs <- 5  # Change to 100 after the function below works
+rf_results_list <- lapply(1:num_mc_runs, function(training_data){
+  rf_result <- Prepare_RF_Model_minimal(training_data)
+  return(rf_result)
+})
+# Now rbind the rf_results_list to get a data.frame
+# with 4 columns and num_mc_runs rows
+rf_results <- do.call(rbind, rf_results_list)
+# and show mean and std of each measure over all monte carlo runs
+(rf_results_mean <- sapply(rf_results, mean))
+(rf_results_sd <- sapply(rf_results, sd))
+
+
 # Prepare the random forest model
 set.seed(12)
 RFmodel = Prepare_RF_Model(training_data)

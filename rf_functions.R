@@ -54,14 +54,7 @@
 CreateTrainingDF <- function(r){
   # the raster-r used for training is made in the run file
   # "tif" is the chosen raster stack to be used *for training*
-  # load training data points from geopackage
 
-  # training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
-  #                       layer="classification_points")
-
-
-
-  # "tif" is the chosen raster stack to be used *for training*
   # load training data points from geopackage
   training_data <- vect(file.path(GIS_dir,"greenhouses.gpkg"),
                         layer="classification_points")
@@ -178,6 +171,22 @@ Prepare_RF_Model <- function(training_data) {
 # #to check
 # rf_model2$bestTune
 # rf_model2$results
+
+
+# Function to run multiple times in Monte Carlo simulation
+Prepare_RF_Model_minimal(training_data){
+  # This function:
+    # (1) prepares a new random sampling of train/test
+    # (2) prepares RF model with train data, and saves accuracy and Kappa
+    # (3) predicts on the test data, and saves accuracy and Kappa
+    # (4) returns a one row dataframe with above 4 values
+  # This will be a copy of Prepare_RF_Model() but without the Variable Imp.
+  # and without plotting or printing
+  rf_result - data.frame()
+  # .... fill in here ....
+  return(rf_result)
+}
+
 
 #it always crashes!!
 ApplyRFModel <- function(r, fit) {
