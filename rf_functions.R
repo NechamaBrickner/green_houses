@@ -52,7 +52,12 @@
 
 
 
-CreateTrainingDF <- function(r, training_data){
+CreateTrainingDF <- function(r, training_data, bands){
+  # parameters in the function:
+    # r - raster being used to extract values
+    # training data - point layer that gets the raster values 
+    # bands - subset of bands that will be used (no need for all bands)
+  
   # "tif" is the chosen raster stack to be used *for training* 
   # takes training data points from a layer
 
