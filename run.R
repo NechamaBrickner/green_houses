@@ -68,8 +68,8 @@ rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
 rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
 
 #create the training data for each model
-training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5)
-training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8 )
+training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5, bands = bands_l5)
+training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8, bands = bands_l8 )
 
 ##############################
 
