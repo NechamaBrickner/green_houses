@@ -82,7 +82,10 @@ AddImageTexture <- function(cropped) {
   # -------------------------------
   # Do we want also an NDVI band?
   ndvi <- ((cropped$NIR - cropped$red) / (cropped$NIR + cropped$red))
-  names(ndvi) <- "NDVI"
+  bsi =  (((cropped$SWIR1 - cropped$red) - (cropped$NIR - cropped$blue))/(cropped$SWIR1 +cropped$red) +(cropped$NIR+cropped$blue)) #bare soil index
+  ndbi = ((cropped$SWIR1 - cropped$NIR) / (cropped$SWIR1 + cropped$NIR)) #Normalized Difference Built-up Index
+  index = c(ndvi, bsi, ndbi)
+  names(index) <- c("NDVI", "BSI", "NDBI")
   #add water index??
   # WI1 <- 4*(cropped$green - cropped$SWIR1) - (0.25*cropped$NIR + 2.75*cropped$SWIR2)
   # names(WI1) <- "WI1"
@@ -91,7 +94,7 @@ AddImageTexture <- function(cropped) {
   # -------------------------------
   # Add to "cropped"
   # Convert texture bands back to terra "SpatRaster"
-  all_layers <- c(cropped, rast(texture), ndvi)
+  all_layers <- c(cropped, rast(texture), index)
   #all_layers <- c(cropped, rast(texture), ndvi, WI1, WI2)
  
   return(all_layers)
