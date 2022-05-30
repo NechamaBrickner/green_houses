@@ -62,7 +62,7 @@ training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
                            layer="cp2")
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
-#the image for landsat8 is from 28_02_2002
+#the image for landsat5 is from 28_02_2002
 #the image for landsat8 is from 18_04_2020 
 rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
 rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
@@ -78,7 +78,7 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #'---------------------------------
 # Do multiple runs of Random Forest, each time with different training/test sets
 
-num_mc_runs <- 2  # Change to 100 after the function below works
+num_mc_runs <- 100  # Change to 100 after the function below works
 
 rf_results_list_l5 <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
