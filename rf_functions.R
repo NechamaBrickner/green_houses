@@ -143,33 +143,16 @@ Prepare_RF_Model_minimal = function(training_data){
                  # discuss whether to use "impurity" or "permutation"
   )
   
-  # Save model
-  # model_rds <- file.path(output_dir, "fitted_RF_model.RDS")
-  # saveRDS(rfFit, model_rds)
-  # Model results:
-  #cat("\nModel accuracy:\n")
-  #print(rfFit$results[rownames(rfFit$bestTune),][c("Accuracy", "Kappa")])
+  
   rf_result[1,'train_accuracy'] <- rfFit$results[rownames(rfFit$bestTune),]["Accuracy"]
   rf_result[1,'train_kappa'] <- rfFit$results[rownames(rfFit$bestTune),]["Kappa"]
-  # Get and print variable importance
-  # var_importance <- varImp(rfFit, scale=TRUE)
-  # cat("\nVariable importance:\n")
-  # print(var_importance)
-  # varimp_file <- file.path(output_dir, "variable_importance.png")
-  # vip <- ggplot(var_importance)
-  # ggsave(varimp_file, plot = vip)
   
   # Apply on test data, and show confusion matrix 
   rfPred <- predict(rfFit, newdata = test_df)
   con.mat <- confusionMatrix(rfPred, reference = test_df$ground_type)
   rf_result[1,'test_accuracy'] <-con.mat$overall["Accuracy"]
   rf_result[1,'test_kappa'] <-con.mat$overall["Kappa"]
-  #cat("\nTest accuracy:\n") 
-  #print(con.mat$overall[c("Accuracy", "Kappa")])
-  # cat("\nConfusion matrix:")
-  # print(con.mat$table)
-  
-  
+ 
   # and without plotting or printing
   # .... fill in here ....
   return(rf_result)
@@ -260,32 +243,18 @@ Prepare_RF_Model <- function(training_data) {
 ApplyRFModel <- function(r, fit) {
   # Apply model to rasters
   
-  # r_predict <- terra::predict(object = r, model = fit,
-  #                             factors = c("Water", "Orchard", "Ground", "Light_Green_House", "Dark_Green_House", 
-  #                                         "Solar_Panels"),
-  #                             na.rm = TRUE)
-  
-  # #pridict fr the new point layer without solar panels with ground_d
-  # r_predict <- terra::predict(object = r, model = fit,
-  #                             factors = c("Water", "Orchard", "Ground", "ground_d", "Light_Green_House", 
-  #                                         "Dark_Green_House"),
-  #                             na.rm = TRUE)
-  
-  #pridict fr the new point layer without solar panels with ground_d
+  #predict for the new point layer without solar panels and water and with ground_d
   r_predict <- terra::predict(object = r, model = fit,
                               factors = c("Orchard", "Ground", "Light_Green_House", 
                                           "Dark_Green_House"),
                               na.rm = TRUE) 
   
-  # sp_classified_file <- file.path(Output_dir, "superpixels_classified.gpkg")
-  # st_write(obj = sp_classified, dsn=sp_classified_file,
-  #          layer = "superpixels_FC", append = FALSE, delete_layer = TRUE)
   return(r_predict)
 }
 
 PlotClassified <- function(rast_list, classified_list) {
   # to add to plots
-  colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
+  #colors = c("gray", "yellow", "cyan", "dark green", "black", "blue")
   colors = c("gray", "yellow", "cyan", "dark green", "blue")
   par(mfrow = c(2,1))
   lapply(seq_along(rast_list), function(i){
