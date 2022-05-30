@@ -96,6 +96,88 @@ CreateTrainingDF <- function(r, training_data){
   return(extract_points)
 }
 
+###############################
+
+# Function to run multiple times in Monte Carlo simulation
+Prepare_RF_Model_minimal = function(training_data){
+  # This function:
+  # (1) prepares a new random sampling of train/test
+  # (2) prepares RF model with train data, and saves accuracy and Kappa
+  # (3) predicts on the test data, and saves accuracy and Kappa
+  # (4) returns a one row dataframe with above 4 values
+  # This will be a copy of Prepare_RF_Model() but without the Variable Imp.
+  rf_result = data.frame("train_accuracy" = numeric(),
+                         "train_kappa" = numeric(),
+                         "test_accuracy" = numeric(),
+                         "test_kappa" = numeric())
+  rfGrid <- expand.grid(mtry = 2:5,         # Number of variables at each split
+                        splitrule = "gini",  # How to decide when to split
+                        min.node.size = 2:5  # How deep each tree
+  )
+  
+  # Limit how many K-folds and how many retries 
+  rfControl <- trainControl(                # 10-fold CV, 3 repeats
+    method = "repeatedcv",
+    number = 10,
+    repeats = 4
+  )
+  
+  # Split train/test
+  train_idx <- createDataPartition(
+    y = training_data$ground_type,
+    p = .75,
+    list = FALSE
+  )
+  train_df <- training_data[train_idx,]
+  test_df <- training_data[-train_idx,]
+  
+  
+  rfFit <- train(ground_type ~ ., data = train_df, 
+                 method = "ranger", 
+                 trControl = rfControl, 
+                 verbose = TRUE, 
+                 tuneGrid = rfGrid,
+                 preProcess=c("center", "scale"),
+                 importance = "permutation" 
+                 # -----Note:-----
+                 # discuss whether to use "impurity" or "permutation"
+  )
+  
+  # Save model
+  # model_rds <- file.path(output_dir, "fitted_RF_model.RDS")
+  # saveRDS(rfFit, model_rds)
+  # Model results:
+  #cat("\nModel accuracy:\n")
+  #print(rfFit$results[rownames(rfFit$bestTune),][c("Accuracy", "Kappa")])
+  rf_result[1,'train_accuracy'] <- rfFit$results[rownames(rfFit$bestTune),]["Accuracy"]
+  rf_result[1,'train_kappa'] <- rfFit$results[rownames(rfFit$bestTune),]["Kappa"]
+  # Get and print variable importance
+  # var_importance <- varImp(rfFit, scale=TRUE)
+  # cat("\nVariable importance:\n")
+  # print(var_importance)
+  # varimp_file <- file.path(output_dir, "variable_importance.png")
+  # vip <- ggplot(var_importance)
+  # ggsave(varimp_file, plot = vip)
+  
+  # Apply on test data, and show confusion matrix 
+  rfPred <- predict(rfFit, newdata = test_df)
+  con.mat <- confusionMatrix(rfPred, reference = test_df$ground_type)
+  rf_result[1,'test_accuracy'] <-con.mat$overall["Accuracy"]
+  rf_result[1,'test_kappa'] <-con.mat$overall["Kappa"]
+  #cat("\nTest accuracy:\n") 
+  #print(con.mat$overall[c("Accuracy", "Kappa")])
+  # cat("\nConfusion matrix:")
+  # print(con.mat$table)
+  
+  
+  # and without plotting or printing
+  # .... fill in here ....
+  return(rf_result)
+}
+
+
+##################################
+
 Prepare_RF_Model <- function(training_data) {
   # Limit number of variables that will be tried in train()
   # To limit how many variable comgination are tried, We can set either:
@@ -105,9 +187,9 @@ Prepare_RF_Model <- function(training_data) {
   # these numbers can be changed to get a better modle???
   rfGrid <- expand.grid(mtry = 2:5,         # Number of variables at each split
                         splitrule = "gini",  # How to decide when to split
-                        min.node.size = 2:4  # How deep each tree
+                        min.node.size = 2:5  # How deep each tree
   )
-  # THis grid gives a total of 28 combinations of parameters??? not 24
+  # This grid gives a total of 28 combinations of parameters??? not 24
   
   # Limit how many K-folds and how many retries 
   rfControl <- trainControl(                # 10-fold CV, 3 repeats
