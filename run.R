@@ -79,17 +79,32 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 # Do multiple runs of Random Forest, each time with different training/test sets
 
 num_mc_runs <- 2  # Change to 100 after the function below works
-rf_results_list <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
+
+rf_results_list_l5 <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
   return(rf_result)
 })
 
 # Now rbind the rf_results_list to get a data.frame
 # with 4 columns and num_mc_runs rows
-rf_results <- do.call(rbind, rf_results_list)
+rf_results_l5 <- do.call(rbind, rf_results_list_l5)
 # and show mean and std of each measure over all monte carlo runs
-(rf_results_mean <- sapply(rf_results, mean))
-(rf_results_sd <- sapply(rf_results, sd))
+(rf_results_l5_mean <- sapply(rf_results_l5, mean))
+(rf_results_l5_sd <- sapply(rf_results_l5, sd))
+
+
+rf_results_list_l8 <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
+  rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
+  return(rf_result)
+})
+
+# Now rbind the rf_results_list to get a data.frame
+# with 4 columns and num_mc_runs rows
+rf_results_l8 <- do.call(rbind, rf_results_list_l8)
+# and show mean and std of each measure over all monte carlo runs
+(rf_results_mean_l8 <- sapply(rf_results_l8, mean))
+(rf_results_l8_sd <- sapply(rf_results_l8, sd))
+
 
 #####################################
 
