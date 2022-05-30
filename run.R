@@ -71,6 +71,28 @@ rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
 training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5)
 training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8 )
 
+##############################
+
+#'---------------------------------
+#' Monte Carlo Simulation
+#'---------------------------------
+# Do multiple runs of Random Forest, each time with different training/test sets
+
+num_mc_runs <- 2  # Change to 100 after the function below works
+rf_results_list <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
+  rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
+  return(rf_result)
+})
+
+# Now rbind the rf_results_list to get a data.frame
+# with 4 columns and num_mc_runs rows
+rf_results <- do.call(rbind, rf_results_list)
+# and show mean and std of each measure over all monte carlo runs
+(rf_results_mean <- sapply(rf_results, mean))
+(rf_results_sd <- sapply(rf_results, sd))
+
+#####################################
+
 
 # Prepare the random forest model
 set.seed(12)
@@ -81,6 +103,8 @@ RFmodel_l5 = Prepare_RF_Model(training_data = training_data_L5)
 tif_cropped = list.files(cropped_dir, pattern = "tif$",
                          full.names = TRUE)
 tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only ... by pattern
+
+#can we make a "variable" of the year in the name to compare to so dividing into l5 and l8 isnt with list...
 
 #need to make 2 list of cropped images by landsat to classify with the correct model
 #
