@@ -47,8 +47,13 @@ names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by t
 
 #split the raster "list" intp 2 groups by landsat
 # the numbers will change depending on the number of images 
+#computer at the lab 
 crop_rasters_l5 = crop_rasters[8:14]
 crop_rasters_l8 = crop_rasters[1:7]
+
+#my computer
+crop_rasters_l5 = crop_rasters[3:4]
+crop_rasters_l8 = crop_rasters[1:2]
 #'---------------------------------
 #' Random Forest classification
 #'---------------------------------
@@ -64,8 +69,9 @@ training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
 #the image for landsat5 is from 28_02_2002
 #the image for landsat8 is from 18_04_2020 
-rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
 rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
+rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
+
 
 #create the training data for each model
 training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5, bands = bands_l5)
@@ -78,7 +84,7 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #' #'---------------------------------
 #' # Do multiple runs of Random Forest, each time with different training/test sets
 #' 
-#' num_mc_runs <- 1  # Change to 100 after the function below works
+#' num_mc_runs <- 5  # Change to 100 after the function below works
 #' 
 #' rf_results_list_l5 <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
 #'   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
@@ -93,8 +99,8 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #' (rf_results_l5_sd <- sapply(rf_results_l5, sd))
 #' 
 #' 
-#' rf_results_list_l8 <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
-#'   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
+#' rf_results_list_l8 <- lapply(1:num_mc_runs, function(training_data=training_data_L8){
+#'   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L8)
 #'   return(rf_result)
 #' })
 #' 
@@ -104,15 +110,15 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #' # and show mean and std of each measure over all monte carlo runs
 #' (rf_results_mean_l8 <- sapply(rf_results_l8, mean))
 #' (rf_results_l8_sd <- sapply(rf_results_l8, sd))
-
+#' 
 
 #####################################
 
 
 # Prepare the random forest model
 set.seed(12)
-RFmodel_l8 = Prepare_RF_Model(training_data = training_data_L8)
 RFmodel_l5 = Prepare_RF_Model(training_data = training_data_L5)
+RFmodel_l8 = Prepare_RF_Model(training_data = training_data_L8)
 
 # get list of names of cropped raster files
 tif_cropped = list.files(cropped_dir, pattern = "tif$",
