@@ -53,7 +53,7 @@ crop_classified_rasters <- lapply(buffer500$name, function(sa){
     #crop and mask to yishuv out line
     cropped <- terra::crop(r, study_area)
     masked = terra::mask(r, study_area)
-    classified_mask = terra::mask(masked, yishuv_mask_r, maskvalues = -999)#maskes the area of the yishuv, makes the the raster size bigger with NA's  
+    classified_mask = terra::mask(masked, yishuv_mask_r, maskvalues = -999)#maskes the area of the yishuv, makes the the raster size bigger with NA's
     #save the cropped images
     d_split <- strsplit(x=basename(t), split = "_", fixed = TRUE)
     datestr <- unlist(d_split)[3]
@@ -101,25 +101,25 @@ tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_
 # hazeva_c_c <- tif_crop_classified[grep(pattern = "Hazeva", x = tif_crop_classified)]  #takes only... by pattern
 # ein_yahav_c_c <- tif_crop_classified[grep(pattern = "Ein_Yahav", x = tif_crop_classified)]  #takes only... by pattern
 # paran_c_c <- tif_crop_classified[grep(pattern = "Paran", x = tif_crop_classified)]  #takes only... by pattern
-# 
+#
 # #gets name of pic with out .tif at end and ./croppped/ at begining
 # name_hazeva = substr(hazeva_c_c,1,nchar(hazeva_c_c)-4)
 # name_hazeva = substr(name_hazeva, 11, nchar(name_hazeva))
-# 
+#
 # # df to join with nams of each raster
 # num = 1:length(name_hazeva)
 # names_h = data.frame(num, name_hazeva)
-# 
+#
 # name_ein_yahav = substr(ein_yahav_c_c,1,nchar(ein_yahav_c_c)-4)
 # name_ein_yahav = substr(name_ein_yahav, 11, nchar(name_ein_yahav))
-# 
+#
 # # df to join with nams of each raster
 # num = 1:length(name_ein_yahav)
 # names_ey = data.frame(num, name_ein_yahav)
-# 
+#
 # name_paran = substr(paran_c_c,1,nchar(paran_c_c)-4)
 # name_paran = substr(name_paran, 11, nchar(name_paran))
-# 
+#
 # # df to join with nams of each raster
 # num = 1:length(name_paran)
 # names_h = data.frame(num, name_paran)
@@ -136,10 +136,10 @@ h3 = as.data.frame(prop.table(table(as.vector(H[[3]])))*100)
 df = as.data.frame(freq(H))
 df = df %>%
   group_by(layer) %>%
-  mutate(porportion = count/sum(count)*100) 
-  
-  
-  
+  mutate(porportion = count/sum(count)*100)
+
+
+
 
 
 
@@ -147,7 +147,7 @@ df = df %>%
 L5 = list(crop_rasters$LT05_L2SP_174039_19900227_20200916_02_T1, crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1)
 names(crop_rasters)[grep(pattern="LT05_", x=names(crop_rasters))]
 
-  
+
 #new index
 coastal = rast(".\\Landsat_datasets\\LC08_L2SP_174039_20200418_20200822_02_T1\\LC08_L2SP_174039_20200418_20200822_02_T1_SR_B1.TIF")
 red = rast(".\\Landsat_datasets\\LC08_L2SP_174039_20200418_20200822_02_T1\\LC08_L2SP_174039_20200418_20200822_02_T1_SR_B4.TIF")
@@ -192,29 +192,29 @@ rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
 bands_l5 = c("green", "NIR", "SWIR2", "variance" ,"contrast", "NDVI","BSI", "NDBI")
 
 CreateTrainingDF <- function(r, training_data){
-  # "tif" is the chosen raster stack to be used *for training* 
+  # "tif" is the chosen raster stack to be used *for training*
   # takes training data points from a layer
-  
+
   training_data = training_data %>%
     filter(Ground_Typ != "Water")
   training_data <- vect(training_data)
-  
+
   # selects wanted bands to build the model
-  train_bands <- r[[bands_l5]] 
+  train_bands <- r[[bands_l5]]
   extract_points = terra::extract(train_bands, training_data,
                                   method = "simple")
-  
+
   extract_points$ground_type = factor(training_data$Ground_Typ)
   extract_points = select(extract_points, -ID)
-  
-  
+
+
   # count number of incomplete rows and erases them
   cnt_na <- sum(!complete.cases(extract_points))
   if (cnt_na > 0) {
     print(paste("Number of rows with NA:", cnt_na, "(removing...)"))
     extract_points <- extract_points[complete.cases(extract_points),]
   }
-  
+
   return(extract_points)
 }
 
@@ -234,14 +234,14 @@ Prepare_RF_Model_l5 <- function(training_data) {
                         min.node.size = 2:5  # How deep each tree
   )
   # THis grid gives a total of 28 combinations of parameters??? not 24
-  
-  # Limit how many K-folds and how many retries 
+
+  # Limit how many K-folds and how many retries
   rfControl <- trainControl(                # 10-fold CV, 3 repeats
     method = "repeatedcv",
     number = 10,
     repeats = 4
   )
-  
+
   # Split train/test
   train_idx <- createDataPartition(
     y = training_data$ground_type,
@@ -250,30 +250,30 @@ Prepare_RF_Model_l5 <- function(training_data) {
   )
   train_df <- training_data[train_idx,]
   test_df <- training_data[-train_idx,]
-  
+
   ## Parallel processing
   ## Use 1/2 of the cores
   # ncores = parallel::detectCores() / 2
   # clust <- makeCluster(ncores)
   # registerDoParallel(clust)
-  rfFit <- train(ground_type ~ ., data = train_df, 
-                 method = "ranger", 
-                 trControl = rfControl, 
-                 verbose = TRUE, 
+  rfFit <- train(ground_type ~ ., data = train_df,
+                 method = "ranger",
+                 trControl = rfControl,
+                 verbose = TRUE,
                  tuneGrid = rfGrid,
                  preProcess=c("center", "scale"),
-                 importance = "permutation" 
+                 importance = "permutation"
                  # -----Note:-----
                  # discuss whether to use "impurity" or "permutation"
   )
-  
+
   # Save model
   model_rds <- file.path(output_dir, "fitted_RF_model_l5.RDS")
   saveRDS(rfFit, model_rds)
   # Model results:
   cat("\nModel accuracy:\n")
   print(rfFit$results[rownames(rfFit$bestTune),][c("Accuracy", "Kappa")])
-  
+
   # Get and print variable importance
   var_importance <- varImp(rfFit, scale=TRUE)
   cat("\nVariable importance:\n")
@@ -285,11 +285,11 @@ Prepare_RF_Model_l5 <- function(training_data) {
   #plot(var_importance, main="Variable Importance")
   #dev.off()
   # stopCluster(clust)
-  
-  # Apply on test data, and show confusion matrix 
+
+  # Apply on test data, and show confusion matrix
   rfPred <- predict(rfFit, newdata = test_df)
   con.mat <- confusionMatrix(rfPred, reference = test_df$ground_type)
-  cat("\nTest accuracy:\n") 
+  cat("\nTest accuracy:\n")
   print(con.mat$overall[c("Accuracy", "Kappa")])
   cat("\nConfusion matrix:")
   print(con.mat$table)
@@ -300,9 +300,9 @@ set.seed(12)
 RFmodel_l5_20 = Prepare_RF_Model_l5(training_data = training_data_L5)
 
 classifiedl5_m20 = terra::predict(object = crop_rasters_l5, model = RFmodel_l5_20,
-                              factors = c("Orchard", "Ground", "Light_Green_House", 
+                              factors = c("Orchard", "Ground", "Light_Green_House",
                                           "Dark_Green_House"),
-                              na.rm = TRUE) 
+                              na.rm = TRUE)
 writeRaster(x = classifiedl5_m20, filename = "index\\c_l5_m20.tif",
             overwrite = TRUE)
 
@@ -328,29 +328,29 @@ bands_l8 = c("blue", "NIR","SWIR2", "variance", "NDVI","BSI", "NDBI")
 bands_l8 = c("green", "NIR","SWIR1", "variance", "NDVI","BSI", "NDBI")
 
 CreateTrainingDF <- function(r, training_data){
-  # "tif" is the chosen raster stack to be used *for training* 
+  # "tif" is the chosen raster stack to be used *for training*
   # takes training data points from a layer
-  
+
   training_data = training_data %>%
     filter(Ground_Typ != "Water")
   training_data <- vect(training_data)
-  
+
   # selects wanted bands to build the model
-  train_bands <- r[[bands_l8]] 
+  train_bands <- r[[bands_l8]]
   extract_points = terra::extract(train_bands, training_data,
                                   method = "simple")
-  
+
   extract_points$ground_type = factor(training_data$Ground_Typ)
   extract_points = select(extract_points, -ID)
-  
-  
+
+
   # count number of incomplete rows and erases them
   cnt_na <- sum(!complete.cases(extract_points))
   if (cnt_na > 0) {
     print(paste("Number of rows with NA:", cnt_na, "(removing...)"))
     extract_points <- extract_points[complete.cases(extract_points),]
   }
-  
+
   return(extract_points)
 }
 
@@ -370,14 +370,14 @@ Prepare_RF_Model_l8 <- function(training_data) {
                         min.node.size = 2:5  # How deep each tree
   )
   # THis grid gives a total of 28 combinations of parameters??? not 24
-  
-  # Limit how many K-folds and how many retries 
+
+  # Limit how many K-folds and how many retries
   rfControl <- trainControl(                # 10-fold CV, 3 repeats
     method = "repeatedcv",
     number = 10,
     repeats = 4
   )
-  
+
   # Split train/test
   train_idx <- createDataPartition(
     y = training_data$ground_type,
@@ -386,30 +386,30 @@ Prepare_RF_Model_l8 <- function(training_data) {
   )
   train_df <- training_data[train_idx,]
   test_df <- training_data[-train_idx,]
-  
+
   ## Parallel processing
   ## Use 1/2 of the cores
   # ncores = parallel::detectCores() / 2
   # clust <- makeCluster(ncores)
   # registerDoParallel(clust)
-  rfFit <- train(ground_type ~ ., data = train_df, 
-                 method = "ranger", 
-                 trControl = rfControl, 
-                 verbose = TRUE, 
+  rfFit <- train(ground_type ~ ., data = train_df,
+                 method = "ranger",
+                 trControl = rfControl,
+                 verbose = TRUE,
                  tuneGrid = rfGrid,
                  preProcess=c("center", "scale"),
-                 importance = "permutation" 
+                 importance = "permutation"
                  # -----Note:-----
                  # discuss whether to use "impurity" or "permutation"
   )
-  
+
   # Save model
   model_rds <- file.path(output_dir, "fitted_RF_model_l5.RDS")
   saveRDS(rfFit, model_rds)
   # Model results:
   cat("\nModel accuracy:\n")
   print(rfFit$results[rownames(rfFit$bestTune),][c("Accuracy", "Kappa")])
-  
+
   # Get and print variable importance
   var_importance <- varImp(rfFit, scale=TRUE)
   cat("\nVariable importance:\n")
@@ -421,11 +421,11 @@ Prepare_RF_Model_l8 <- function(training_data) {
   #plot(var_importance, main="Variable Importance")
   #dev.off()
   # stopCluster(clust)
-  
-  # Apply on test data, and show confusion matrix 
+
+  # Apply on test data, and show confusion matrix
   rfPred <- predict(rfFit, newdata = test_df)
   con.mat <- confusionMatrix(rfPred, reference = test_df$ground_type)
-  cat("\nTest accuracy:\n") 
+  cat("\nTest accuracy:\n")
   print(con.mat$overall[c("Accuracy", "Kappa")])
   cat("\nConfusion matrix:")
   print(con.mat$table)
@@ -436,9 +436,9 @@ set.seed(12)
 RFmodel_l8_m10 = Prepare_RF_Model_l8(training_data = training_data_L8)
 
 classifiedl8_m10 = terra::predict(object = crop_rasters_l8, model = RFmodel_l8_m10,
-                                  factors = c("Orchard", "Ground", "Light_Green_House", 
+                                  factors = c("Orchard", "Ground", "Light_Green_House",
                                               "Dark_Green_House"),
-                                  na.rm = TRUE) 
+                                  na.rm = TRUE)
 writeRaster(x = classifiedl8_m10, filename = "index\\c_l8_m10.tif",
             overwrite = TRUE)
 
@@ -456,14 +456,14 @@ Prepare_RF_Model_l5 <- function(training_data) {
                         min.node.size = 2:5  # How deep each tree
   )
   # THis grid gives a total of 28 combinations of parameters??? not 24
-  
-  # Limit how many K-folds and how many retries 
+
+  # Limit how many K-folds and how many retries
   rfControl <- trainControl(                # 10-fold CV, 3 repeats
     method = "repeatedcv",
     number = 10,
     repeats = 4
   )
-  
+
   # Split train/test
   train_idx <- createDataPartition(
     y = training_data$ground_type,
@@ -472,30 +472,30 @@ Prepare_RF_Model_l5 <- function(training_data) {
   )
   train_df <- training_data[train_idx,]
   test_df <- training_data[-train_idx,]
-  
+
   ## Parallel processing
   ## Use 1/2 of the cores
   # ncores = parallel::detectCores() / 2
   # clust <- makeCluster(ncores)
   # registerDoParallel(clust)
-  rfFit <- train(ground_type ~ ., data = train_df, 
-                 method = "ranger", 
-                 trControl = rfControl, 
-                 verbose = TRUE, 
+  rfFit <- train(ground_type ~ ., data = train_df,
+                 method = "ranger",
+                 trControl = rfControl,
+                 verbose = TRUE,
                  tuneGrid = rfGrid,
                  preProcess=c("center", "scale"),
-                 importance = "permutation" 
+                 importance = "permutation"
                  # -----Note:-----
                  # discuss whether to use "impurity" or "permutation"
   )
-  
+
   # # Save model
   # model_rds <- file.path(output_dir, "fitted_RF_model_l5.RDS")
   # saveRDS(rfFit, model_rds)
   # # Model results:
   cat("\nModel accuracy:\n")
   print(rfFit$results[rownames(rfFit$bestTune),][c("Accuracy", "Kappa")])
-  
+
   # # Get and print variable importance
   # var_importance <- varImp(rfFit, scale=TRUE)
   # cat("\nVariable importance:\n")
@@ -507,11 +507,11 @@ Prepare_RF_Model_l5 <- function(training_data) {
   #plot(var_importance, main="Variable Importance")
   #dev.off()
   # stopCluster(clust)
-  
-  # Apply on test data, and show confusion matrix 
+
+  # Apply on test data, and show confusion matrix
   rfPred <- predict(rfFit, newdata = test_df)
   con.mat <- confusionMatrix(rfPred, reference = test_df$ground_type)
-  cat("\nTest accuracy:\n") 
+  cat("\nTest accuracy:\n")
   print(con.mat$overall[c("Accuracy", "Kappa")])
   # cat("\nConfusion matrix:")
   # print(con.mat$table)
@@ -529,18 +529,18 @@ Prepare_RF_Model_l5 <- function(training_data) {
 RFmodel_l5 = Prepare_RF_Model_l5(training_data = training_data_L5)
 
 # x = list()
-# 
+#
 # for (i in 3){
 #   RFmodel_l5 = Prepare_RF_Model_l5(training_data = training_data_L5)
 #   x = list(RFmodel_l5)
 #   return(x)
-# } 
+# }
 
 #####
 
-# trying to make a code based off of crop rasters (run file) that can go 1 more level into 
-# the folders and do the CropDataset function for each image and then calculate the mean pixel values per band per year 
-# and then continue with the AddImageTexture function. 
+# trying to make a code based off of crop rasters (run file) that can go 1 more level into
+# the folders and do the CropDataset function for each image and then calculate the mean pixel values per band per year
+# and then continue with the AddImageTexture function.
 
 #folder layout:
 
@@ -555,16 +555,41 @@ RFmodel_l5 = Prepare_RF_Model_l5(training_data = training_data_L5)
     #image3
   #....
 
-# function to get the next level of folders 
+# function to get the next level of folders
 # folder_list = function(tif_dirs_full) {
 #   list.dirs(tif_dirs_full)[-1]
 # }
-# 
-# 
+#
+#
 # #creates a list of lists of landsat folders by year
 # tif_dirs_full_year = lapply(tif_dirs_full, folder_list)
 
-# 
+#----------------------------------------------------------
+# MS: I think the above is unnecessary. The function list.dirs() already returns a list
+# Note the parameter "recusrsive = FALSE". If you leave it at TRUE,
+# then you'll get the full paths to *all* the image files (not what you want)
+tif_dirs_full_year <- list.dirs(tif_dirs_full,
+  full.names = TRUE, recursive = FALSE)
+# Now just loop thru those year folders and do what you want with the images
+
+ crop_rasters_list <- lapply(tif_dirs_full_year, function(year_folder) {
+   image_list <- list.files(path = year_folder,
+     pattern = ".tif", full.names = TRUE)
+   cropped_year <- CropDatasets(image_list, full_area)
+ })
+
+# Just one caveat:
+# You probably will want to save the year for each item (cropped raster stack)
+# in the list "crop_raster_list"
+# You can do this by setting the names for the items in the lists:
+
+years <- list.dirs(tif_dirs_full,
+    full.names = FALSE, # Now we want only the year, NOT the full path
+    recursive = FALSE)
+names(crop_rasters_list) <- years
+# Now the list "cropped_rasters_list" is a "named list"
+#----------------------------------------------------------
+
 # folder = tif_dirs_full_year[[1]]
 # d = folder[1]
 
@@ -583,7 +608,7 @@ crop_rasters <- lapply(tif_dirs_full_year, function(folder) {
       # The directory name will be used to name the new, cropped tif file
       #
       cropped <- CropDatasets(tif_list, full_area)
-      
+
       return(crop_all_layers)
     }
   })
@@ -610,15 +635,15 @@ for (year in tif_dirs_full_year) {
     if (length(tif_list) > 0) {
       # pass both list of tif files, and containing directory to the cropping function
       # The directory name will be used to name the new, cropped tif file
-      # 
+      #
       cropped <- CropDatasets(tif_list, full_area)
-      
+
       yearlist[count] = list(cropped)
       count = count +1
       #return(cropped)
-      
+
     }
-    
+
   }
   print(yearlist)
   l = sds(yearlist)
