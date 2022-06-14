@@ -535,3 +535,97 @@ RFmodel_l5 = Prepare_RF_Model_l5(training_data = training_data_L5)
 #   x = list(RFmodel_l5)
 #   return(x)
 # } 
+
+#####
+
+# trying to make a code based off of crop rasters (run file) that can go 1 more level into 
+# the folders and do the CropDataset function for each image and then calculate the mean pixel values per band per year 
+# and then continue with the AddImageTexture function. 
+
+#folder layout:
+
+#Landsat datasets
+  #1985
+    #image1
+    #image2
+    #image3
+  #1990
+    #image1
+    #image2
+    #image3
+  #....
+
+# function to get the next level of folders 
+# folder_list = function(tif_dirs_full) {
+#   list.dirs(tif_dirs_full)[-1]
+# }
+# 
+# 
+# #creates a list of lists of landsat folders by year
+# tif_dirs_full_year = lapply(tif_dirs_full, folder_list)
+
+# 
+# folder = tif_dirs_full_year[[1]]
+# d = folder[1]
+
+#my attempt to add another lapply to go 1 level in, did not work
+# i also subset the original tif_dirs_full to only have the folders of years
+
+crop_rasters <- lapply(tif_dirs_full_year, function(folder) {
+  folder1 = tif_dirs_full_year[folder]
+  lapply(folder1, function(d){
+    folder2 = folder1[d]
+    # Get list of TIF files in each dir
+    tif_list = list.files(folder2, pattern = "TIF$",
+                          full.names = TRUE, recursive = TRUE)
+    if (length(tif_list) > 0) {
+      # pass both list of tif files, and containing directory to the cropping function
+      # The directory name will be used to name the new, cropped tif file
+      #
+      cropped <- CropDatasets(tif_list, full_area)
+      
+      return(crop_all_layers)
+    }
+  })
+})
+
+
+
+# code needed to get mean of pixels by band
+# l = sds(list())
+# meanr = app(l, mean)
+
+
+#code my sister helped me write using 2 for loops
+
+imagelist = list()
+outercounter = 1
+for (year in tif_dirs_full_year) {
+  #print(year)
+  yearlist = list()
+  count = 1
+  for (image in year) {
+    tif_list = list.files(image, pattern = "TIF$",
+                          full.names = TRUE, recursive = TRUE)
+    if (length(tif_list) > 0) {
+      # pass both list of tif files, and containing directory to the cropping function
+      # The directory name will be used to name the new, cropped tif file
+      # 
+      cropped <- CropDatasets(tif_list, full_area)
+      
+      yearlist[count] = list(cropped)
+      count = count +1
+      #return(cropped)
+      
+    }
+    
+  }
+  print(yearlist)
+  l = sds(yearlist)
+  meanr = app(l, mean)
+  imagelist[outercounter] = meanr
+  #imagelist[outercounter] = list(yearlist)
+  outercounter = outercounter +1
+}
+
+imagelist
