@@ -91,13 +91,19 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
     })
     l = sds(final_list)
     final_stack = app(l, mean)
+    
+    #save the images (after cropped, texture, index and mear per year )
+          rastname = paste("full_area", years[fidx], sep="_")
+          rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
+          terra::writeRaster(x= final_stack,
+                             filename = rastpath, overwrite = TRUE)
     return(final_stack)
   }
 })
 #}
 
 #? will this give the right name
-names(crop_rasters) = years
+names(crop_rasters) = paste0("yr", years)
 
 
 #split the raster "list" intp 2 groups by landsat
