@@ -625,8 +625,8 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
       return(final)   
     }
   })
-  l = sds(final_list)
-  final_stack = app(l, mean)
+  l = sds(final_list) # take the rasters and put them in a SpatRasterDataset
+  final_stack = app(l, mean) #callculate the mean of evry pixel by bands (blue-blue, green-green...)
   return(final_stack)
 }
 })
@@ -640,36 +640,51 @@ names(crop_rasters) = years
 # meanr = app(l, mean)
 
 
-#code my sister helped me write using 2 for loops
+# #code my sister helped me write using 2 for loops
+# 
+# imagelist = list()
+# outercounter = 1
+# for (year in tif_dirs_full_year) {
+#   #print(year)
+#   yearlist = list()
+#   count = 1
+#   for (image in year) {
+#     tif_list = list.files(image, pattern = "TIF$",
+#                           full.names = TRUE, recursive = TRUE)
+#     if (length(tif_list) > 0) {
+#       # pass both list of tif files, and containing directory to the cropping function
+#       # The directory name will be used to name the new, cropped tif file
+#       #
+#       cropped <- CropDatasets(tif_list, full_area)
+# 
+#       yearlist[count] = list(cropped)
+#       count = count +1
+#       #return(cropped)
+# 
+#     }
+# 
+#   }
+#   print(yearlist)
+#   l = sds(yearlist)
+#   meanr = app(l, mean)
+#   imagelist[outercounter] = meanr
+#   #imagelist[outercounter] = list(yearlist)
+#   outercounter = outercounter +1
+# }
+# 
+# imagelist
 
-imagelist = list()
-outercounter = 1
-for (year in tif_dirs_full_year) {
-  #print(year)
-  yearlist = list()
-  count = 1
-  for (image in year) {
-    tif_list = list.files(image, pattern = "TIF$",
-                          full.names = TRUE, recursive = TRUE)
-    if (length(tif_list) > 0) {
-      # pass both list of tif files, and containing directory to the cropping function
-      # The directory name will be used to name the new, cropped tif file
-      #
-      cropped <- CropDatasets(tif_list, full_area)
 
-      yearlist[count] = list(cropped)
-      count = count +1
-      #return(cropped)
+#trying to plot with ggplot
+library(ggplot2)
+library(tidyverse)
+library(terra)
 
-    }
+r = rast("cropped/Ein_Yahav_19900227_classified.tif")
+plot(r)
 
-  }
-  print(yearlist)
-  l = sds(yearlist)
-  meanr = app(l, mean)
-  imagelist[outercounter] = meanr
-  #imagelist[outercounter] = list(yearlist)
-  outercounter = outercounter +1
-}
-
-imagelist
+x = c(710000, 730000)
+y = c(3385000, 3450000)
+t = data.frame(x,y)
+ggplot(t, aes(x, y)) +
+  geom_raster(aes(fill = r))
