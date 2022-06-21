@@ -19,31 +19,86 @@ tif_dirs_full <- list.dirs(datasets_dir)[-1]
 #' Crop Landsat to full area
 #'---------------------------------
 # Work on each Landsat dataset separately
-crop_rasters <- lapply(tif_dirs_full, function(d) {
-    # Get list of TIF files in each dir
-    tif_list = list.files(d, pattern = "TIF$",
-                          full.names = TRUE, recursive = TRUE)
-    if (length(tif_list) > 0) {
-      # pass both list of tif files, and containing directory to the cropping function
-      # The directory name will be used to name the new, cropped tif file
-      # 
-      cropped <- CropDatasets(tif_list, full_area)
-      crop_all_layers <- AddImageTexture(cropped)
-      
-      #save the cropped images
-      d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
-      datestr <- unlist(d_split)[4]
-      datestr = paste(substring(datestr, 1, 4), substring(datestr, 5, 6), substring(datestr, 7,8), sep = "_")
-      rastname = paste("full_area", datestr, sep="_")
-      rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
-      terra::writeRaster(x= crop_all_layers,
-                         filename = rastpath, overwrite = TRUE)
-     
-      return(crop_all_layers)
-    }
-})
 
-names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by the date...
+### old 
+# crop_rasters <- lapply(tif_dirs_full, function(d) {
+#     # Get list of TIF files in each dir
+#     tif_list = list.files(d, pattern = "TIF$",
+#                           full.names = TRUE, recursive = TRUE)
+#     if (length(tif_list) > 0) {
+#       # pass both list of tif files, and containing directory to the cropping function
+#       # The directory name will be used to name the new, cropped tif file
+#       # 
+#       cropped <- CropDatasets(tif_list, full_area)
+#       crop_all_layers <- AddImageTexture(cropped)
+#       
+#       #save the cropped images
+#       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+#       datestr <- unlist(d_split)[4]
+#       datestr = paste(substring(datestr, 1, 4), substring(datestr, 5, 6), substring(datestr, 7,8), sep = "_")
+#       rastname = paste("full_area", datestr, sep="_")
+#       rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
+#       terra::writeRaster(x= crop_all_layers,
+#                          filename = rastpath, overwrite = TRUE)
+#      
+#       return(crop_all_layers)
+#     }
+# })
+# 
+# names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by the date...
+
+years <- list.dirs(datasets_dir,
+                   full.names = FALSE, # Now we want only the year, NOT the full path
+                   recursive = FALSE)
+year_dirs <- list.dirs(datasets_dir,
+                       full.names = TRUE,
+                       recursive = FALSE)
+names(year_dirs) <- years
+# Now the list "cropped_rasters_list" is a "named list"
+#----------------------------------------------------------
+
+# folder = tif_dirs_full_year[[1]]
+# d = folder[1]
+
+#my attempt to add another lapply to go 1 level in, did not work
+# i also subset the original tif_dirs_full to only have the folders of years
+
+crop_rasters <- lapply(1:length(years), function(fidx) {
+  year_dir <- year_dirs[[fidx]]
+  #folder1 = tif_dirs_full_year[folder]
+  year_dataset_list <- lapply(year_dir, function(d){
+    #    folder2 = folder1[d]
+    #Get list of TIF files in each dir
+    year_dataset_list = list.dirs(d, full.names = TRUE, recursive = FALSE)
+    
+    return(year_dataset_list)
+  })
+  year_dataset_list <- unlist(year_dataset_list)
+  if (length(year_dataset_list) > 0) {
+    final_list <- lapply(year_dataset_list, function(d) {
+      # Get list of TIF files in each dir
+      tif_list = list.files(d, pattern = "TIF$",
+                            full.names = TRUE, recursive = TRUE)
+      if (length(tif_list) > 0) {
+        # pass both list of tif files, and containing directory to the cropping function
+        # The directory name will be used to name the new, cropped tif file
+        
+        cropped <- CropDatasets(tif_list, full_area)
+        # Textures?
+        final <- AddImageTexture(cropped)
+        return(final)   
+      }
+    })
+    l = sds(final_list)
+    final_stack = app(l, mean)
+    return(final_stack)
+  }
+})
+#}
+
+#? will this give the right name
+names(crop_rasters) = years
+
 
 #split the raster "list" intp 2 groups by landsat
 # the numbers will change depending on the number of images 
