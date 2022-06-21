@@ -583,10 +583,13 @@ tif_dirs_full_year <- list.dirs(tif_dirs_full,
 # in the list "crop_raster_list"
 # You can do this by setting the names for the items in the lists:
 
-years <- list.dirs(tif_dirs_full,
+years <- list.dirs(datasets_dir,
     full.names = FALSE, # Now we want only the year, NOT the full path
     recursive = FALSE)
-names(crop_rasters_list) <- years
+year_dirs <- list.dirs(datasets_dir,
+                       full.names = TRUE,
+                       recursive = FALSE)
+names(year_dirs) <- years
 # Now the list "cropped_rasters_list" is a "named list"
 #----------------------------------------------------------
 
@@ -596,25 +599,41 @@ names(crop_rasters_list) <- years
 #my attempt to add another lapply to go 1 level in, did not work
 # i also subset the original tif_dirs_full to only have the folders of years
 
-crop_rasters <- lapply(tif_dirs_full_year, function(folder) {
-  folder1 = tif_dirs_full_year[folder]
-  lapply(folder1, function(d){
-    folder2 = folder1[d]
-    # Get list of TIF files in each dir
-    tif_list = list.files(folder2, pattern = "TIF$",
-                          full.names = TRUE, recursive = TRUE)
-    if (length(tif_list) > 0) {
+crop_rasters <- lapply(1:length(years), function(fidx) {
+  year_dir <- year_dirs[[fidx]]
+  #folder1 = tif_dirs_full_year[folder]
+  year_dataset_list <- lapply(year_dir, function(d){
+    #    folder2 = folder1[d]
+     #Get list of TIF files in each dir
+    year_dataset_list = list.dirs(d, full.names = TRUE, recursive = FALSE)
+    
+    return(year_dataset_list)
+    })
+  year_dataset_list <- unlist(year_dataset_list)
+  if (length(year_dataset_list) > 0) {
+    final_list <- lapply(year_dataset_list, function(d) {
+      # Get list of TIF files in each dir
+      tif_list = list.files(d, pattern = "TIF$",
+                            full.names = TRUE, recursive = TRUE)
+      if (length(tif_list) > 0) {
       # pass both list of tif files, and containing directory to the cropping function
       # The directory name will be used to name the new, cropped tif file
-      #
+    
       cropped <- CropDatasets(tif_list, full_area)
-
-      return(crop_all_layers)
+      # Textures?
+      final <- AddImageTexture(cropped)
+      return(final)   
     }
   })
+  l = sds(final_list)
+  final_stack = app(l, mean)
+  return(final_stack)
+}
 })
+#}
 
-
+#? will this give the right name
+names(crop_rasters) = years
 
 # code needed to get mean of pixels by band
 # l = sds(list())
