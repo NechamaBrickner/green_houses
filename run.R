@@ -105,12 +105,11 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
 #? will this give the right name
 names(crop_rasters) = paste0("fullarea", years)
 
-
 #split the raster "list" intp 2 groups by landsat
 # the numbers will change depending on the number of images 
 ###computer at the lab, need to change to work with images i have
-crop_rasters_l5 = crop_rasters[8:14]
-crop_rasters_l8 = crop_rasters[1:7]
+crop_rasters_l5 = crop_rasters[1:7]
+crop_rasters_l8 = crop_rasters[8:9]
 
 # #my computer
 # crop_rasters_l5 = crop_rasters[3:4]
@@ -131,12 +130,12 @@ training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
 #the image for landsat5 is from 28_02_2002
 #the image for landsat8 is from 18_04_2020 
 
-rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
-rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
+#rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
+#rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
 
 #should change to...
-rast_4_RF_l5 = crop_rasters$fullarea_2002
-rast_4_RF_l8 = crop_rasters$fullarea_2020
+rast_4_RF_l5 = crop_rasters$fullarea2002
+rast_4_RF_l8 = crop_rasters$fullarea2020
 
 #create the training data for each model
 training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5, bands = bands_l5)
@@ -186,16 +185,16 @@ RFmodel_l5 = Prepare_RF_Model(training_data = training_data_L5, mod_name = lands
 RFmodel_l8 = Prepare_RF_Model(training_data = training_data_L8, mod_name = landsat8)
 
 # get list of names of cropped raster files
-tif_cropped = list.files(cropped_dir, pattern = "tif$",
+tif_cropped = list.files(fullarea_dir, pattern = "tif$",
                          full.names = TRUE)
-tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only ... by pattern
+#tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only ... by pattern
 
 #can we make a "variable" of the year in the name to compare to so dividing into l5 and l8 isnt with list...
 
 #need to make 2 list of cropped images by landsat to classify with the correct model
 #will change
-tif_cropped_l5 = tif_cropped[c(1,3,5,7,9,11,13)]
-tif_cropped_l8 = tif_cropped[c(15,17,19,21,23,24,27)]
+tif_cropped_l5 = tif_cropped[1:7]
+tif_cropped_l8 = tif_cropped[8:9]
 
 #'---------------------------------
 #' Run classification
@@ -240,13 +239,6 @@ classified_rasters_l5 = classified_rasters(tif_cropped = tif_cropped_l5,
 classified_rasters_l8 = classified_rasters(tif_cropped = tif_cropped_l8, 
                                            bands = bands_l8, fit = RFmodel_l8, landsat = landsat8)
 #PlotClassified(tif_cropped, classified_rasters)
-
-
-# get list of names of classified raster files
-tif_classified = list.files(classified_full_dir, pattern = "tif$",
-                         full.names = TRUE)
-tif_classified_l5 <- tif_classified[grep(pattern = "l5", x = tif_classified)]  #takes only... by pattern
-tif_classified_l8 <- tif_classified[grep(pattern = "l8", x = tif_classified)]
 
 #' #'---------------------------------
 #' #' albedo band
