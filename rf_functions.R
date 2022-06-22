@@ -319,8 +319,8 @@ crop_classified_rasters = function(tif_classified, landsat) {
       #save the cropped images
       d_split <- strsplit(x=basename(t), split = "_", fixed = TRUE)
       yearstr <- unlist(d_split)[3]
-      monthstr <- unlist(d_split)[4]
-      rastname = paste(sa, yearstr, monthstr,paste0("classified_", landsat), sep="_")
+      #monthstr <- unlist(d_split)[4]
+      rastname = paste(sa, yearstr,"classified", landsat, sep="_")
       rastpath <- file.path(classified_cropped_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= cropped,
                          filename = rastpath, overwrite = TRUE)
