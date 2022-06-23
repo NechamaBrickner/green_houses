@@ -90,10 +90,10 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
       }
     })
     l = sds(final_list)
-    final_stack = app(l, mean)
+    final_stack = app(l, mean, na.rm = TRUE)
     
     #save the images (after cropped, texture, index and mear per year )
-          rastname = paste("full_area", years[fidx], sep="_")
+          rastname = paste("full_area1", years[fidx], sep="_")
           rastpath <- file.path(fullarea_dir, paste0(rastname, ".tif"))
           terra::writeRaster(x= final_stack,
                              filename = rastpath, overwrite = TRUE)
@@ -187,7 +187,7 @@ RFmodel_l8 = Prepare_RF_Model(training_data = training_data_L8, mod_name = lands
 # get list of names of cropped raster files
 tif_cropped = list.files(fullarea_dir, pattern = "tif$",
                          full.names = TRUE)
-#tif_cropped <- tif_cropped[grep(pattern = "full_area", x = tif_cropped)]  #takes only ... by pattern
+tif_cropped <- tif_cropped[grep(pattern = "full_area1", x = tif_cropped)]  #takes only ... by pattern
 
 #can we make a "variable" of the year in the name to compare to so dividing into l5 and l8 isnt with list...
 
@@ -285,6 +285,7 @@ classified_rasters_l8 = classified_rasters(tif_cropped = tif_cropped_l8,
 # get list of names of classified raster files
 tif_classified = list.files(classified_full_dir, pattern = "tif$",
                             full.names = TRUE)
+tif_classified <- tif_classified[grep(pattern = "classified1", x = tif_classified)] 
 tif_classified_l5 <- tif_classified[grep(pattern = "l5", x = tif_classified)]  #takes only... by pattern
 tif_classified_l8 <- tif_classified[grep(pattern = "l8", x = tif_classified)]
 
@@ -348,6 +349,7 @@ crop_classified_rasters_l8 =  crop_classified_rasters(tif_classified = tif_class
 
 tif_crop_classified = list.files(classified_cropped_dir, pattern = "tif$",
                                  full.names = TRUE)
+tif_crop_classified <- tif_crop_classified[grep(pattern = "classified1", x = tif_crop_classified)] 
 #tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)]  #takes only... by pattern
 #tiff list of all classified rasters by yishuv
 tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva", x = tif_crop_classified)]  #takes only... by pattern
@@ -364,13 +366,13 @@ col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
 #lev = levels(training_data_L5$ground_type)
 
 #plot to pdf all classified rasters by yishuv
-pdf(file ="./output/h.pdf", width = 9.5, height = 5)
+pdf(file ="./output/h1.pdf", width = 9.5, height = 5)
 plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
 dev.off()
-pdf(file ="./output/ey.pdf", width = 6, height = 5)
+pdf(file ="./output/ey1.pdf", width = 6, height = 5)
 plot(rast_cc_ein_yahav, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
-pdf(file ="./output/p.pdf", width = 9, height = 5)
+pdf(file ="./output/p1.pdf", width = 9, height = 5)
 plot(rast_cc_paran, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
 
