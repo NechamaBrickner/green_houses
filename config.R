@@ -47,6 +47,10 @@ if (!dir.exists(datasets_dir)) {
   dir.create(datasets_dir)
 }
 
+datasets_td_dir = "./Landsat_td_datasets"
+if (!dir.exists(datasets_td_dir)) {
+  dir.create(datasets_td_dir)
+}
 # # folder for cropped images
 # cropped_dir <- "./cropped"
 # if (!dir.exists(cropped_dir)) {
