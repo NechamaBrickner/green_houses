@@ -12,7 +12,7 @@ print(paste(t0, "-- Begin process"))
 full_area = vect(file.path(GIS_dir, "greenhouses.gpkg"),
                       layer="classification_area")
 # Get all Landsat folders in datasets_dir
-tif_dirs_full <- list.dirs(datasets_dir)[-1]
+tif_dirs_full <- list.dirs(datasets_td_dir)[-1]
 
 
 #'---------------------------------
@@ -21,31 +21,31 @@ tif_dirs_full <- list.dirs(datasets_dir)[-1]
 # Work on each Landsat dataset separately
 
 ### old 
-# crop_rasters <- lapply(tif_dirs_full, function(d) {
-#     # Get list of TIF files in each dir
-#     tif_list = list.files(d, pattern = "TIF$",
-#                           full.names = TRUE, recursive = TRUE)
-#     if (length(tif_list) > 0) {
-#       # pass both list of tif files, and containing directory to the cropping function
-#       # The directory name will be used to name the new, cropped tif file
-#       # 
-#       cropped <- CropDatasets(tif_list, full_area)
-#       crop_all_layers <- AddImageTexture(cropped)
-#       
-#       #save the cropped images
-#       d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
-#       datestr <- unlist(d_split)[4]
-#       datestr = paste(substring(datestr, 1, 4), substring(datestr, 5, 6), substring(datestr, 7,8), sep = "_")
-#       rastname = paste("full_area", datestr, sep="_")
-#       rastpath <- file.path(cropped_dir, paste0(rastname, ".tif"))
-#       terra::writeRaster(x= crop_all_layers,
-#                          filename = rastpath, overwrite = TRUE)
-#      
-#       return(crop_all_layers)
-#     }
-# })
-# 
-# names(crop_rasters) <- basename(tif_dirs_full) #gives the name of the image by the date...
+crop_rasters_td <- lapply(tif_dirs_full, function(d) {
+    # Get list of TIF files in each dir
+    tif_list = list.files(d, pattern = "TIF$",
+                          full.names = TRUE, recursive = TRUE)
+    if (length(tif_list) > 0) {
+      # pass both list of tif files, and containing directory to the cropping function
+      # The directory name will be used to name the new, cropped tif file
+      #
+      cropped <- CropDatasets(tif_list, full_area)
+      crop_all_layers <- AddImageTexture(cropped)
+
+      #save the cropped images
+      d_split <- strsplit(x=basename(d), split = "_", fixed = TRUE)
+      datestr <- unlist(d_split)[4]
+      datestr = paste(substring(datestr, 1, 4), substring(datestr, 5, 6), substring(datestr, 7,8), sep = "_")
+      rastname = paste("full_area_td", datestr, sep="_")
+      rastpath <- file.path(fullarea_dir, paste0(rastname, ".tif"))
+      terra::writeRaster(x= crop_all_layers,
+                         filename = rastpath, overwrite = TRUE)
+
+      return(crop_all_layers)
+    }
+})
+
+names(crop_rasters_td) <- basename(tif_dirs_full) #gives the name of the image by the date...
 
 years <- list.dirs(datasets_dir,
                    full.names = FALSE, # Now we want only the year, NOT the full path
@@ -93,7 +93,7 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
     final_stack = app(l, mean, na.rm = TRUE)
     
     #save the images (after cropped, texture, index and mear per year )
-          rastname = paste("full_area1", years[fidx], sep="_")
+          rastname = paste("full_area3", years[fidx], sep="_")
           rastpath <- file.path(fullarea_dir, paste0(rastname, ".tif"))
           terra::writeRaster(x= final_stack,
                              filename = rastpath, overwrite = TRUE)
@@ -130,12 +130,13 @@ training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
 #the image for landsat5 is from 28_02_2002
 #the image for landsat8 is from 18_04_2020 
 
-#rast_4_RF_l5 = crop_rasters$LT05_L2SP_174039_20020228_20211206_02_T1
-#rast_4_RF_l8 = crop_rasters$LC08_L2SP_174039_20200418_20200822_02_T1
+rast_4_RF_l5 = crop_rasters_td$LT05_L2SP_174039_20020228_20211206_02_T1
+#rast_4_RF_l8 = crop_rasters_td$LC08_L2SP_174039_20200418_20200822_02_T1
+rast_4_RF_l8 = crop_rasters_td$LC08_L2SP_174039_20200214_20200823_02_T1
 
-#should change to...
-rast_4_RF_l5 = crop_rasters$fullarea2002
-rast_4_RF_l8 = crop_rasters$fullarea2020
+# #should change to...
+# rast_4_RF_l5 = crop_rasters$fullarea2002
+# rast_4_RF_l8 = crop_rasters$fullarea2020
 
 #create the training data for each model
 training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5, bands = bands_l5)
@@ -175,7 +176,6 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #' (rf_results_l8_mean <- sapply(rf_results_l8, mean))
 #' (rf_results_l8_sd <- sapply(rf_results_l8, sd))
 
-
 #####################################
 
 
@@ -187,7 +187,7 @@ RFmodel_l8 = Prepare_RF_Model(training_data = training_data_L8, mod_name = lands
 # get list of names of cropped raster files
 tif_cropped = list.files(fullarea_dir, pattern = "tif$",
                          full.names = TRUE)
-tif_cropped <- tif_cropped[grep(pattern = "full_area1", x = tif_cropped)]  #takes only ... by pattern
+tif_cropped <- tif_cropped[grep(pattern = "full_area3", x = tif_cropped)]  #takes only ... by pattern
 
 #can we make a "variable" of the year in the name to compare to so dividing into l5 and l8 isnt with list...
 
@@ -285,7 +285,7 @@ classified_rasters_l8 = classified_rasters(tif_cropped = tif_cropped_l8,
 # get list of names of classified raster files
 tif_classified = list.files(classified_full_dir, pattern = "tif$",
                             full.names = TRUE)
-tif_classified <- tif_classified[grep(pattern = "classified1", x = tif_classified)] 
+tif_classified <- tif_classified[grep(pattern = "classified3", x = tif_classified)] 
 tif_classified_l5 <- tif_classified[grep(pattern = "l5", x = tif_classified)]  #takes only... by pattern
 tif_classified_l8 <- tif_classified[grep(pattern = "l8", x = tif_classified)]
 
@@ -349,7 +349,7 @@ crop_classified_rasters_l8 =  crop_classified_rasters(tif_classified = tif_class
 
 tif_crop_classified = list.files(classified_cropped_dir, pattern = "tif$",
                                  full.names = TRUE)
-tif_crop_classified <- tif_crop_classified[grep(pattern = "classified1", x = tif_crop_classified)] 
+tif_crop_classified <- tif_crop_classified[grep(pattern = "classified3", x = tif_crop_classified)] 
 #tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)]  #takes only... by pattern
 #tiff list of all classified rasters by yishuv
 tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva", x = tif_crop_classified)]  #takes only... by pattern
@@ -366,20 +366,20 @@ col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
 #lev = levels(training_data_L5$ground_type)
 
 #plot to pdf all classified rasters by yishuv
-pdf(file ="./output/h1.pdf", width = 9.5, height = 5)
+pdf(file ="./output/h3.pdf", width = 9.5, height = 5)
 plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
 dev.off()
-pdf(file ="./output/ey1.pdf", width = 6, height = 5)
+pdf(file ="./output/ey3.pdf", width = 6, height = 5)
 plot(rast_cc_ein_yahav, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
-pdf(file ="./output/p1.pdf", width = 9, height = 5)
+pdf(file ="./output/p3.pdf", width = 9, height = 5)
 plot(rast_cc_paran, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
 
-#makes a freqency table for each yishuv
-frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
-frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = yishuv_n[2])
-frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
+# #makes a freqency table for each yishuv
+# frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
+# frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = yishuv_n[2])
+# frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
 
 
 # #gets name of pic with out .tif at end and ./croppped/ at begining
