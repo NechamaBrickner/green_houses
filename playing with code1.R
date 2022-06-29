@@ -690,6 +690,7 @@ ggplot(t, aes(x, y)) +
   geom_raster(aes(fill = r))
 
 
+#cheeck corelation when using mean composits for 2002 and 2020 (with out 18.4.2020)
 
 #load the rasters 
 r_l5 = rast("output\\fullarea\\full_area1_2002.tif")
