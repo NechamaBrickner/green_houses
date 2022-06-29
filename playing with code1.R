@@ -688,3 +688,37 @@ y = c(3385000, 3450000)
 t = data.frame(x,y)
 ggplot(t, aes(x, y)) +
   geom_raster(aes(fill = r))
+
+
+
+#load the rasters 
+r_l5 = rast("output\\fullarea\\full_area1_2002.tif")
+r_l8 = rast("output\\fullarea\\full_area1_2020.tif")
+
+#load traing data points
+training_data_l5 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
+                           layer="cp_L5")
+training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
+                           layer="cp2")
+
+#bands
+bands = c("blue", "green", "red", "NIR", "SWIR1", "SWIR2", "variance", "contrast", "NDVI", "BSI", "NDBI")
+#extract the pixel values to the points using all bands
+training_data_L5 = CreateTrainingDF(r = r_l5, training_data = training_data_l5, bands = bands)
+training_data_L8 = CreateTrainingDF(r = r_l8, training_data = training_data_l8, bands = bands)
+
+#correlation in data frame
+cor_l5 = as.data.frame(cor(training_data_L5[1:11]))
+cor_l8 = as.data.frame(cor(training_data_L8[1:11]))
+
+library(corrplot)
+library(RColorBrewer)
+
+# plot the correlation with nice format
+col1 = brewer.pal(10, "PiYG")
+corrplot(cor(training_data_L5[1:11]), type = 'lower', diag =F ,
+         tl.col = 'black', addCoef.col = 'black', col = col1)
+corrplot(cor(training_data_L8[1:11]), type = 'lower', diag =F ,
+         tl.col = 'black', addCoef.col = 'black', col = col1)
+
+
