@@ -180,7 +180,7 @@ frequency_table = function(tif_cc, yishuv){
     mutate(porportion = count/sum(count)*100) %>% #add percentage of each land type
     select(name, everything())
   
-  table_path <- file.path(output_dir, paste0("frequency_table", yishuv, ".csv"))
+  table_path <- file.path(output_dir, paste0("frequency_table_", yishuv, ".csv"))
   write.csv(ft, table_path)
   
   return(ft)
