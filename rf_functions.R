@@ -212,7 +212,7 @@ Prepare_RF_Model <- function(training_data, mod_name) {
   )
   
   # Save model
-  model_rds <- file.path(output_dir, paste0(mod_name,"fitted_RF_model3.RDS"))
+  model_rds <- file.path(output_dir, paste0(mod_name,"fitted_RF_model.RDS"))
   saveRDS(rfFit, model_rds)
   # Model results:
   cat("\nModel accuracy:\n")
@@ -222,7 +222,7 @@ Prepare_RF_Model <- function(training_data, mod_name) {
   var_importance <- varImp(rfFit, scale=TRUE)
   cat("\nVariable importance:\n")
   print(var_importance)
-  varimp_file <- file.path(output_dir, paste0(mod_name, "variable_importance3.png"))
+  varimp_file <- file.path(output_dir, paste0(mod_name, "variable_importance.png"))
   vip <- ggplot(var_importance)
   ggsave(varimp_file, plot = vip)
   #png(varimp_file)
@@ -270,7 +270,7 @@ classified_rasters = function(tif_cropped, bands, fit, landsat) {
     rast_classify = ApplyRFModel(r, fit) # classify the raster
     r_split <- strsplit(x=basename(t), split = ".", fixed = TRUE)
     r_split <- unlist(r_split)[1]
-    rastname = paste(r_split, paste0("classified3_", landsat), sep="_")
+    rastname = paste(r_split, paste0("classified_", landsat), sep="_")
     rastpath <- file.path(classified_full_dir, paste0(rastname, ".tif"))
     writeRaster(x = rast_classify, filename = rastpath,
                 overwrite = TRUE)
@@ -320,7 +320,7 @@ crop_classified_rasters = function(tif_classified, landsat) {
       d_split <- strsplit(x=basename(t), split = "_", fixed = TRUE)
       yearstr <- unlist(d_split)[3]
       #monthstr <- unlist(d_split)[4]
-      rastname = paste(sa, yearstr,"classified3", landsat, sep="_")
+      rastname = paste(sa, yearstr,"classified", landsat, sep="_")
       rastpath <- file.path(classified_cropped_dir, paste0(rastname, ".tif"))
       terra::writeRaster(x= cropped,
                          filename = rastpath, overwrite = TRUE)
