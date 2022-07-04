@@ -143,14 +143,19 @@ training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_d
 training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8, bands = bands_l8 )
 
 ##############################
-#' 
+
 #' #'---------------------------------
 #' #' Monte Carlo Simulation
 #' #'---------------------------------
 #' # Do multiple runs of Random Forest, each time with different training/test sets
 #' 
+#' #load the raster for training data
+#' rast_4_RF_l5 = rast(".\\output\\fullarea\\Full_Area_2002.tif")
+#' rast_4_RF_l8 = rast(".\\output\\fullarea\\Full_Area_2020.tif")
+#' 
 #' num_mc_runs <- 1  # Change to 100 after the function below works
 #' 
+#' #run the rf 100 times for l5
 #' rf_results_list_l5 <- lapply(1:num_mc_runs, function(training_data=training_data_L5){
 #'   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L5)
 #'   return(rf_result)
@@ -160,10 +165,18 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #' # with 4 columns and num_mc_runs rows
 #' rf_results_l5 <- do.call(rbind, rf_results_list_l5)
 #' # and show mean and std of each measure over all monte carlo runs
-#' (rf_results_l5_mean <- sapply(rf_results_l5, mean))
-#' (rf_results_l5_sd <- sapply(rf_results_l5, sd))
+#' # (rf_results_l5_mean <- sapply(rf_results_l5, mean))
+#' # (rf_results_l5_sd <- sapply(rf_results_l5, sd))
 #' 
+#' rf_results_l5_mean = rf_results_l5 %>%
+#'   summarise_if(is.numeric, mean)
+#' rf_results_l5_mean
 #' 
+#' rf_results_l5_sd = rf_results_l5 %>%
+#'   summarise_if(is.numeric, sd)
+#' rf_results_l5_sd
+#' 
+#' #run the rf 100 times for l8
 #' rf_results_list_l8 <- lapply(1:num_mc_runs, function(training_data=training_data_L8){
 #'   rf_result <- Prepare_RF_Model_minimal(training_data= training_data_L8)
 #'   return(rf_result)
@@ -173,8 +186,22 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 #' # with 4 columns and num_mc_runs rows
 #' rf_results_l8 <- do.call(rbind, rf_results_list_l8)
 #' # and show mean and std of each measure over all monte carlo runs
-#' (rf_results_l8_mean <- sapply(rf_results_l8, mean))
-#' (rf_results_l8_sd <- sapply(rf_results_l8, sd))
+#' # (rf_results_l8_mean <- sapply(rf_results_l8, mean))
+#' # (rf_results_l8_sd <- sapply(rf_results_l8, sd))
+#' 
+#' rf_results_l8_mean = rf_results_l8 %>%
+#'   summarise_if(is.numeric, mean)
+#' rf_results_l8_mean
+#' 
+#' rf_results_l8_sd = rf_results_l8 %>%
+#'   summarise_if(is.numeric, sd)
+#' rf_results_l8_sd
+#' 
+#' name = c("L5 mean", "L5 sd", "L8 mean", "L8 sd")
+#' 
+#' MC_results_mean_sd = as.data.frame(rbind(rf_results_l5_mean, rf_results_l5_sd, rf_results_l8_mean, rf_results_l8_sd))
+#' MC_results_mean_sd = as.data.frame(cbind(name, MC_results_mean_sd))
+#' write.csv(MC_results_mean_sd, "./output/MC_results_mean_sd.csv")
 
 #####################################
 
