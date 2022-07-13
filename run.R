@@ -409,6 +409,24 @@ frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = 
 frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
 
 
+ft_h = frequency_table_hazeva %>%
+  filter(value != "Open Ground")
+ft_h %>%
+  ggplot(aes(x=years, y=count, group=value, color=value)) +
+  geom_line()
+
+ft_ey = frequency_table_ein_yahav %>%
+  filter(value != "Open Ground")
+ft_ey %>%
+  ggplot(aes(x=years, y=count, group=value, color=value)) +
+  geom_line()
+
+ft_p = frequency_table_paran %>%
+  filter(value != "Open Ground")
+ft_p %>%
+  ggplot(aes(x=years, y=count, group=value, color=value)) +
+  geom_line()
+
 # #gets name of pic with out .tif at end and ./croppped/ at begining
 # name_yishuv = substr(tif_crop_classified,1,nchar(tif_crop_classified)-4)
 # name_yishuv = substr(name_yishuv, 11, nchar(name_yishuv))
