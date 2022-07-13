@@ -82,7 +82,7 @@ AddImageTexture <- function(cropped) {
   # -------------------------------
   # Do we want also an NDVI band?
   ndvi <- ((cropped$NIR - cropped$red) / (cropped$NIR + cropped$red))
-  bsi =  (((cropped$SWIR1 - cropped$red) - (cropped$NIR - cropped$blue))/(cropped$SWIR1 +cropped$red) +(cropped$NIR+cropped$blue)) #bare soil index
+  bsi =  (((cropped$SWIR1 + cropped$red) - (cropped$NIR + cropped$blue))/(cropped$SWIR1 +cropped$red) +(cropped$NIR+cropped$blue)) #bare soil index
   ndbi = ((cropped$SWIR1 - cropped$NIR) / (cropped$SWIR1 + cropped$NIR)) #Normalized Difference Built-up Index
   index = c(ndvi, bsi, ndbi)
   names(index) <- c("NDVI", "BSI", "NDBI")
@@ -168,7 +168,8 @@ frequency_table = function(tif_cc, yishuv){
   name = substr(name, 29, nchar(name))
   # df to join with nams of each raster
   num = 1:length(name)
-  df = data.frame(num, name)
+  df = data.frame(num, name, years)
+  df$years = as.numeric(df$years)
   #take the list of files and turn to multiband raster
   r_tif_cc = rast(tif_cc)
   names(r_tif_cc) = name # give each band the name from name
@@ -178,10 +179,20 @@ frequency_table = function(tif_cc, yishuv){
     left_join(df, by = c("layer" = "num"))%>% # join with df of raster names
     group_by(layer) %>%
     mutate(porportion = count/sum(count)*100) %>% #add percentage of each land type
-    select(name, everything())
+    select(name, everything()) 
   
-  table_path <- file.path(output_dir, paste0("frequency_table_", yishuv, ".csv"))
+  
+  ft$value = as.character(ft$value)
+  ft["value"][ft["value"] == 1] = "Dark GH"
+  ft["value"][ft["value"] == 2] = "Open Ground"
+  ft["value"][ft["value"] == 3] = "Light GH"
+  ft["value"][ft["value"] == 4] = "Orchard and Vegetation"
+  
+  table_path <- file.path(output_dir, paste0("frequency_table1_", yishuv, ".csv"))
   write.csv(ft, table_path)
+  
   
   return(ft)
 }
+
+
