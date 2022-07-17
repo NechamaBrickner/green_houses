@@ -54,7 +54,7 @@ year_dirs <- list.dirs(datasets_dir,
                        full.names = TRUE,
                        recursive = FALSE)
 names(year_dirs) <- years
-# Now the list "cropped_rasters_list" is a "named list"
+# Now the list "cropped_rasters_list" is a "named list" 
 #----------------------------------------------------------
 
 # folder = tif_dirs_full_year[[1]]
@@ -122,9 +122,9 @@ crop_rasters_l8 = crop_rasters[8:9]
 
 #load the training poinys for each model
 training_data_l5 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
-                           layer="cp_L5")
+                           layer="td_L5")
 training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
-                           layer="cp2")
+                           layer="td_L8")
 
 #Prepare RF Model using a single raster stack from the rast_4_RF_list
 #the image for landsat5 is from 28_02_2002
@@ -318,7 +318,7 @@ tif_classified_l8 <- tif_classified[grep(pattern = "l8", x = tif_classified)]
 
 
 buffer500 = vect(file.path(GIS_dir, "greenhouses.gpkg"),
-                 layer="area_buffer500_detailed")
+                 layer="yishuv_areas_b500")
 yishuv_mask = vect(file.path(GIS_dir, "greenhouses.gpkg"),
                    layer="yishuv_mask")
 
