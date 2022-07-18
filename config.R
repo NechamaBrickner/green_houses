@@ -100,4 +100,4 @@ landsat8 = "l8"
 bands_l5=c("blue","NIR","SWIR1", "variance", "NDVI", "BSI", "NDBI")
 bands_l8=c("green", "NIR","SWIR2", "variance", "NDVI", "BSI", "NDBI")
 
-yishuv_n = c("hazeva", "ein_yahav", "paran")
+yishuv_n = c("hazeva", "ein_yahav", "paran", "tzofar", "h_eh_i")
