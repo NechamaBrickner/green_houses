@@ -303,13 +303,13 @@ classified_rasters = function(tif_cropped, bands, fit, landsat) {
 #saves the classified images cropped to the ysihuv
 #may need to fix the names
 crop_classified_rasters = function(tif_classified, landsat) {
-  lapply(buffer500$name, function(sa){
+  lapply(buffer500$Name, function(sa){
     lapply(tif_classified, function(t) {
       r = rast(t)
       yishuv_mask_r = rasterize(yishuv_mask, r) #rasterizes the yishuv and othe polygons
       yishuv_mask_r[yishuv_mask_r ==1] = -999 # changes the polygon value to -999
       print(paste("In:", sa, "directory:", t))
-      study_area <- buffer500[buffer500$name == sa,]
+      study_area <- buffer500[buffer500$Name == sa,]
       #crop and mask to yishuv out line
       #cropped <- terra::crop(r, study_area)
       masked = terra::mask(r, study_area)
