@@ -379,15 +379,18 @@ tif_crop_classified = list.files(classified_cropped_dir, pattern = "tif$",
 tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)] 
 #tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)]  #takes only... by pattern
 #tiff list of all classified rasters by yishuv
-tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva", x = tif_crop_classified)]  #takes only... by pattern
+tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva_", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_Ein_Yahav <- tif_crop_classified[grep(pattern = "Ein_Yahav", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_Paran <- tif_crop_classified[grep(pattern = "Paran", x = tif_crop_classified)]  #takes only... by pattern
+tif_cc_Tzofar <- tif_crop_classified[grep(pattern = "Tzofar", x = tif_crop_classified)]  #takes only... by pattern
+tif_cc_H_EH_I <- tif_crop_classified[grep(pattern = "Idan", x = tif_crop_classified)]  #takes only... by pattern
 
 #multiband raster of all cropped classified rasters by yishuv
 rast_cc_hazeva = rast_cc(tif_cc = tif_cc_Hazeva)
 rast_cc_ein_yahav = rast_cc(tif_cc = tif_cc_Ein_Yahav)
 rast_cc_paran = rast_cc(tif_cc = tif_cc_Paran)
-
+rast_cc_tzofar = rast_cc(tif_cc = tif_cc_Tzofar)
+rast_cc_h_eh_i = rast_cc(tif_cc = tif_cc_H_EH_I )
 
 col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
 #lev = levels(training_data_L5$ground_type)
@@ -402,11 +405,19 @@ dev.off()
 pdf(file ="./output/Paran.pdf", width = 9, height = 5)
 plot(rast_cc_paran, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
+pdf(file ="./output/Tzofar.pdf", width = 9, height = 5)
+plot(rast_cc_tzofar, col = col, legend = FALSE)#type = "classes", levels = lev)
+dev.off()
+pdf(file ="./output/h_eh_i.pdf", width = 9, height = 5)
+plot(rast_cc_h_eh_i, col = col, legend = FALSE)#type = "classes", levels = lev)
+dev.off()
 
 #makes a freqency table for each yishuv
 frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
 frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = yishuv_n[2])
 frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
+frequency_table_tzofar = frequency_table(tif_cc = tif_cc_Tzofar, yishuv = yishuv_n[4])
+frequency_table_h_eh_i = frequency_table(tif_cc = tif_cc_H_EH_I, yishuv = yishuv_n[5])
 
 
 ft_h = frequency_table_hazeva %>%
@@ -424,6 +435,18 @@ ft_ey %>%
 ft_p = frequency_table_paran %>%
   filter(value != "Open Ground")
 ft_p %>%
+  ggplot(aes(x=years, y=count, group=value, color=value)) +
+  geom_line()
+
+ft_t = frequency_table_tzofar %>%
+  filter(value != "Open Ground")
+ft_t %>%
+  ggplot(aes(x=years, y=count, group=value, color=value)) +
+  geom_line()
+
+ft_h_eh_i = frequency_table_h_eh_i %>%
+  filter(value != "Open Ground")
+ft_h_eh_i %>%
   ggplot(aes(x=years, y=count, group=value, color=value)) +
   geom_line()
 
