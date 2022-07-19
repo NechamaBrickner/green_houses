@@ -108,8 +108,15 @@ names(crop_rasters) = paste0("fullarea", years)
 #split the raster "list" intp 2 groups by landsat
 # the numbers will change depending on the number of images 
 ###computer at the lab, need to change to work with images i have
-crop_rasters_l5 = crop_rasters[1:7]
-crop_rasters_l8 = crop_rasters[8:9]
+
+# uses the list of years in numeric form as a index
+# removes the use of a specific index 
+
+crop_rasters_l5 = crop_rasters[as.numeric(years) < 2013]
+crop_rasters_l8 = crop_rasters[as.numeric(years) >= 2013]
+
+# crop_rasters_l5 = crop_rasters[1:7]
+# crop_rasters_l8 = crop_rasters[8:9]
 
 # #my computer
 # crop_rasters_l5 = crop_rasters[3:4]
