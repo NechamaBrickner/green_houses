@@ -60,10 +60,16 @@ if (!dir.exists(output_dir)) {
   dir.create(output_dir)
 }
 
-# folder for cropped images
+# folder for cropped fullarea images
 fullarea_dir <- "./output/fullarea"
 if (!dir.exists(fullarea_dir)) {
   dir.create(fullarea_dir)
+}
+
+# folder for cropped yishuv images
+cropped_yishuv_dir <- "./output/cropped_yishuv"
+if (!dir.exists(cropped_yishuv_dir)) {
+  dir.create(cropped_yishuv_dir)
 }
 
 # folder for classified raster's output
