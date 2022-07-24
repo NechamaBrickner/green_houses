@@ -63,6 +63,7 @@ names(year_dirs) <- years
 #my attempt to add another lapply to go 1 level in, did not work
 # i also subset the original tif_dirs_full to only have the folders of years
 
+
 crop_rasters <- lapply(1:length(years), function(fidx) {
   year_dir <- year_dirs[[fidx]]
   #folder1 = tif_dirs_full_year[folder]
@@ -147,7 +148,7 @@ rast_4_RF_l8 = crop_rasters$fullarea2020
 
 #create the training data for each model
 training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5, bands = bands_l5)
-training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8, bands = bands_l8 )
+training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8, bands = bands_l8)
 
 ##############################
 
@@ -227,8 +228,11 @@ tif_cropped <- tif_cropped[grep(pattern = "Full_Area", x = tif_cropped)]  #takes
 
 #need to make 2 list of cropped images by landsat to classify with the correct model
 #will change
-tif_cropped_l5 = tif_cropped[1:7]
-tif_cropped_l8 = tif_cropped[8:9]
+# tif_cropped_l5 = tif_cropped[1:7]
+# tif_cropped_l8 = tif_cropped[8:9]
+
+tif_cropped_l5 = tif_cropped[as.numeric(years) < 2013]
+tif_cropped_l8 = tif_cropped[as.numeric(years) >= 2013]
 
 #'---------------------------------
 #' Run classification
@@ -386,14 +390,15 @@ tif_crop_classified = list.files(classified_cropped_dir, pattern = "tif$",
 tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)] 
 #tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)]  #takes only... by pattern
 #tiff list of all classified rasters by yishuv
-tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva_", x = tif_crop_classified)]  #takes only... by pattern
-tif_cc_Ein_Yahav <- tif_crop_classified[grep(pattern = "Ein_Yahav", x = tif_crop_classified)]  #takes only... by pattern
+#tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva_", x = tif_crop_classified)]  #takes only... by pattern
+tif_cc_Ein_Yahav <- tif_crop_classified[grep(pattern = "Ein Yahav", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_Paran <- tif_crop_classified[grep(pattern = "Paran", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_Tzofar <- tif_crop_classified[grep(pattern = "Tzofar", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_H_EH_I <- tif_crop_classified[grep(pattern = "Idan", x = tif_crop_classified)]  #takes only... by pattern
 
+
 #multiband raster of all cropped classified rasters by yishuv
-rast_cc_hazeva = rast_cc(tif_cc = tif_cc_Hazeva)
+#rast_cc_hazeva = rast_cc(tif_cc = tif_cc_Hazeva)
 rast_cc_ein_yahav = rast_cc(tif_cc = tif_cc_Ein_Yahav)
 rast_cc_paran = rast_cc(tif_cc = tif_cc_Paran)
 rast_cc_tzofar = rast_cc(tif_cc = tif_cc_Tzofar)
@@ -403,59 +408,69 @@ col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
 #lev = levels(training_data_L5$ground_type)
 
 #plot to pdf all classified rasters by yishuv
-pdf(file ="./output/Hazeva.pdf", width = 9.5, height = 5)
-plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
-dev.off()
-pdf(file ="./output/Ein_Yahav.pdf", width = 6, height = 5)
+# pdf(file ="./output/Hazeva.pdf", width = 9.5, height = 5)
+# plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
+# dev.off()
+pdf(file ="./output/Ein_Yahav.pdf", width = 5.5, height = 6)
 plot(rast_cc_ein_yahav, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
-pdf(file ="./output/Paran.pdf", width = 9, height = 5)
+pdf(file ="./output/Paran.pdf", width = 6.5, height = 5)
 plot(rast_cc_paran, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
-pdf(file ="./output/Tzofar.pdf", width = 9, height = 5)
+pdf(file ="./output/Tzofar.pdf", width = 5, height = 7)
 plot(rast_cc_tzofar, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
-pdf(file ="./output/h_eh_i.pdf", width = 9, height = 5)
+pdf(file ="./output/h_eh_i.pdf", width = 7, height = 6.5)
 plot(rast_cc_h_eh_i, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
 
 #makes a freqency table for each yishuv
-frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
+#frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
 frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = yishuv_n[2])
 frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
 frequency_table_tzofar = frequency_table(tif_cc = tif_cc_Tzofar, yishuv = yishuv_n[4])
 frequency_table_h_eh_i = frequency_table(tif_cc = tif_cc_H_EH_I, yishuv = yishuv_n[5])
 
+frequency_table_all = rbind(frequency_table_h_eh_i, frequency_table_ein_yahav,
+                            frequency_table_tzofar, frequency_table_paran)
 
-ft_h = frequency_table_hazeva %>%
+ft_all = frequency_table_all %>%
   filter(value != "Open Ground")
-ft_h %>%
-  ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line()
+ft_all %>%
+  ggplot(aes(x=year, y=count, group=value, color=value)) +
+  geom_line()+
+  facet_wrap(~yishuv_name)
+  
 
-ft_ey = frequency_table_ein_yahav %>%
-  filter(value != "Open Ground")
-ft_ey %>%
-  ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line()
-
-ft_p = frequency_table_paran %>%
-  filter(value != "Open Ground")
-ft_p %>%
-  ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line()
-
-ft_t = frequency_table_tzofar %>%
-  filter(value != "Open Ground")
-ft_t %>%
-  ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line()
-
-ft_h_eh_i = frequency_table_h_eh_i %>%
-  filter(value != "Open Ground")
-ft_h_eh_i %>%
-  ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line()
+# ft_h = frequency_table_hazeva %>%
+#   filter(value != "Open Ground")
+# ft_h %>%
+#   ggplot(aes(x=years, y=count, group=value, color=value)) +
+#   geom_line()
+# 
+# ft_ey = frequency_table_ein_yahav %>%
+#   filter(value != "Open Ground")
+# ft_ey %>%
+#   ggplot(aes(x=years, y=count, group=value, color=value)) +
+#   geom_line()
+# 
+# ft_p = frequency_table_paran %>%
+#   filter(value != "Open Ground")
+# ft_p %>%
+#   ggplot(aes(x=years, y=count, group=value, color=value)) +
+#   geom_line()
+# 
+# ft_t = frequency_table_tzofar %>%
+#   filter(value != "Open Ground")
+# ft_t %>%
+#   ggplot(aes(x=years, y=count, group=value, color=value)) +
+#   geom_line()
+# 
+# ft_h_eh_i = frequency_table_h_eh_i %>%
+#   filter(value != "Open Ground")
+# ft_h_eh_i %>%
+#   ggplot(aes(x=years, y=count, group=value, color=value)) +
+#   geom_line()
 
 # #gets name of pic with out .tif at end and ./croppped/ at begining
 # name_yishuv = substr(tif_crop_classified,1,nchar(tif_crop_classified)-4)
