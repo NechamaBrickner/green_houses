@@ -168,8 +168,7 @@ frequency_table = function(tif_cc, yishuv){
   name = substr(name, 29, nchar(name))
   # df to join with nams of each raster
   num = 1:length(name)
-  df = data.frame(num, name, years)
-  df$years = as.numeric(df$years)
+  df = data.frame(num, name)
   #take the list of files and turn to multiband raster
   r_tif_cc = rast(tif_cc)
   names(r_tif_cc) = name # give each band the name from name
@@ -179,8 +178,9 @@ frequency_table = function(tif_cc, yishuv){
     left_join(df, by = c("layer" = "num"))%>% # join with df of raster names
     group_by(layer) %>%
     mutate(porportion = count/sum(count)*100) %>% #add percentage of each land type
-    select(name, everything()) 
-  
+    separate(name, c("yishuv_name","year"), sep = "_" )%>%
+    select(yishuv_name, everything()) 
+  ft$year = as.numeric(ft$year)
   
   ft$value = as.character(ft$value)
   ft["value"][ft["value"] == 1] = "Dark GH"
