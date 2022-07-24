@@ -693,14 +693,14 @@ ggplot(t, aes(x, y)) +
 #cheeck corelation when using mean composits for 2002 and 2020 (with out 18.4.2020)
 
 #load the rasters 
-r_l5 = rast("output\\fullarea\\full_area1_2002.tif")
-r_l8 = rast("output\\fullarea\\full_area1_2020.tif")
+r_l5 = rast("output\\fullarea\\Full_Area_2002.tif")
+r_l8 = rast("output\\fullarea\\Full_Area_2020.tif")
 
 #load traing data points
 training_data_l5 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
-                           layer="cp_L5")
+                           layer="td_L5")
 training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
-                           layer="cp2")
+                           layer="td_L8")
 
 #bands
 bands = c("blue", "green", "red", "NIR", "SWIR1", "SWIR2", "variance", "contrast", "NDVI", "BSI", "NDBI")
@@ -717,9 +717,15 @@ library(RColorBrewer)
 
 # plot the correlation with nice format
 col1 = brewer.pal(10, "PiYG")
-corrplot(cor(training_data_L5[1:11]), type = 'lower', diag =F ,
-         tl.col = 'black', addCoef.col = 'black', col = col1)
-corrplot(cor(training_data_L8[1:11]), type = 'lower', diag =F ,
+corrplot(cor(training_data_L5[1:11]), type = 'lower', diag = F ,
          tl.col = 'black', addCoef.col = 'black', col = col1)
 
+png(file = "./output/cor_L5.png", width = 600, height = 600)
+corrplot(cor(training_data_L5[1:11]), type = 'lower', diag = F ,
+         tl.col = 'black', addCoef.col = 'black', col = col1)
+dev.off()
 
+png(file = "./output/cor_L8.png", width = 600, height = 600)
+corrplot(cor(training_data_L8[1:11]), type = 'lower', diag = F ,
+         tl.col = 'black', addCoef.col = 'black', col = col1)
+dev.off()
