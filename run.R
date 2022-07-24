@@ -382,8 +382,14 @@ yishuv_mask = vect(file.path(GIS_dir, "greenhouses.gpkg"),
 # })
 # 
 
+#crop fullarea image to yishuv
+crop_yishuv_l5 = crop_yishuv(tif_cropped = tif_cropped_l5, landsat = landsat5)
+crop_yishuv_l8 = crop_yishuv(tif_cropped = tif_cropped_l8, landsat = landsat8)
+
+#crop fullarea classified to yishuv classified
 crop_classified_rasters_l5 =  crop_classified_rasters(tif_classified = tif_classified_l5, landsat = landsat5)
 crop_classified_rasters_l8 =  crop_classified_rasters(tif_classified = tif_classified_l8, landsat = landsat8)
+
 
 tif_crop_classified = list.files(classified_cropped_dir, pattern = "tif$",
                                  full.names = TRUE)
