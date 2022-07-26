@@ -165,10 +165,11 @@ rast_cc = function(tif_cc){
 frequency_table = function(tif_cc, yishuv){
   #gets name of pic with out .tif at end and ./croppped/ at begining
   name = substr(tif_cc,1,nchar(tif_cc)-18)
-  name = substr(name, 29, nchar(name))
+  name = substr(name, 29, nchar(name)) # gets name of raster- yishuv_year
   # df to join with nams of each raster
-  num = 1:length(name)
-  df = data.frame(num, name)
+  num = 1:length(name) #gets number of rasters
+  df = data.frame(num, name, years) #makes df with 3 columns years if from begining...
+  df$years = as.numeric(df$years)
   #take the list of files and turn to multiband raster
   r_tif_cc = rast(tif_cc)
   names(r_tif_cc) = name # give each band the name from name
@@ -178,9 +179,9 @@ frequency_table = function(tif_cc, yishuv){
     left_join(df, by = c("layer" = "num"))%>% # join with df of raster names
     group_by(layer) %>%
     mutate(porportion = count/sum(count)*100) %>% #add percentage of each land type
-    separate(name, c("yishuv_name","year"), sep = "_" )%>%
-    select(yishuv_name, everything()) 
-  ft$year = as.numeric(ft$year)
+    #separate(name, c("yishuv_name","year"), sep = "_" )%>% ## only works if the name is one word 
+    select(name, everything()) 
+  #ft$year = as.numeric(ft$year)
   
   ft$value = as.character(ft$value)
   ft["value"][ft["value"] == 1] = "Dark GH"
