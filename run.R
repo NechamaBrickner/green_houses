@@ -396,15 +396,15 @@ tif_crop_classified = list.files(classified_cropped_dir, pattern = "tif$",
 tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)] 
 #tif_crop_classified <- tif_crop_classified[grep(pattern = "classified", x = tif_crop_classified)]  #takes only... by pattern
 #tiff list of all classified rasters by yishuv
-#tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva_", x = tif_crop_classified)]  #takes only... by pattern
-tif_cc_Ein_Yahav <- tif_crop_classified[grep(pattern = "Ein Yahav", x = tif_crop_classified)]  #takes only... by pattern
+tif_cc_Hazeva <- tif_crop_classified[grep(pattern = "Hazeva_1|Hazeva_2", x = tif_crop_classified)]  #takes only... by pattern
+tif_cc_Ein_Yahav <- tif_crop_classified[grep(pattern = "Ein_Yahav", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_Paran <- tif_crop_classified[grep(pattern = "Paran", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_Tzofar <- tif_crop_classified[grep(pattern = "Tzofar", x = tif_crop_classified)]  #takes only... by pattern
 tif_cc_H_EH_I <- tif_crop_classified[grep(pattern = "Idan", x = tif_crop_classified)]  #takes only... by pattern
 
 
 #multiband raster of all cropped classified rasters by yishuv
-#rast_cc_hazeva = rast_cc(tif_cc = tif_cc_Hazeva)
+rast_cc_hazeva = rast_cc(tif_cc = tif_cc_Hazeva)
 rast_cc_ein_yahav = rast_cc(tif_cc = tif_cc_Ein_Yahav)
 rast_cc_paran = rast_cc(tif_cc = tif_cc_Paran)
 rast_cc_tzofar = rast_cc(tif_cc = tif_cc_Tzofar)
@@ -414,9 +414,9 @@ col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
 #lev = levels(training_data_L5$ground_type)
 
 #plot to pdf all classified rasters by yishuv
-# pdf(file ="./output/Hazeva.pdf", width = 9.5, height = 5)
-# plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
-# dev.off()
+pdf(file ="./output/Hazeva.pdf", width = 9.5, height = 5)
+plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
+dev.off()
 pdf(file ="./output/Ein_Yahav.pdf", width = 5.5, height = 6)
 plot(rast_cc_ein_yahav, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
@@ -430,20 +430,22 @@ pdf(file ="./output/h_eh_i.pdf", width = 7, height = 6.5)
 plot(rast_cc_h_eh_i, col = col, legend = FALSE)#type = "classes", levels = lev)
 dev.off()
 
+
 #makes a freqency table for each yishuv
-#frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
+frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
 frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = yishuv_n[2])
 frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
 frequency_table_tzofar = frequency_table(tif_cc = tif_cc_Tzofar, yishuv = yishuv_n[4])
 frequency_table_h_eh_i = frequency_table(tif_cc = tif_cc_H_EH_I, yishuv = yishuv_n[5])
 
-frequency_table_all = rbind(frequency_table_h_eh_i, frequency_table_ein_yahav,
+frequency_table_all = rbind(frequency_table_hazeva, frequency_table_h_eh_i, frequency_table_ein_yahav,
                             frequency_table_tzofar, frequency_table_paran)
 
 ft_all = frequency_table_all %>%
-  filter(value != "Open Ground")
+  filter(value != "Open Ground") %>%
+  mutate(yishuv_name = substr(name,1,nchar(name)-5))
 ft_all %>%
-  ggplot(aes(x=year, y=count, group=value, color=value)) +
+  ggplot(aes(x=years, y=count, group=value, color=value)) +
   geom_line()+
   facet_wrap(~yishuv_name)
   
