@@ -447,7 +447,11 @@ ft_all = frequency_table_all %>%
 ft_all %>%
   ggplot(aes(x=years, y=count, group=value, color=value)) +
   geom_line()+
-  facet_wrap(~yishuv_name)
+  facet_wrap(~yishuv_name)+
+  scale_color_manual(name ="Land Cover Class",
+                     values = c("Dark GH" = "gray28",
+                                "Light GH"="lightskyblue1",
+                                "Orchard and Vegetation" = "dark green"))
   
 
 # ft_h = frequency_table_hazeva %>%
