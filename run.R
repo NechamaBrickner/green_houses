@@ -410,26 +410,99 @@ rast_cc_paran = rast_cc(tif_cc = tif_cc_Paran)
 rast_cc_tzofar = rast_cc(tif_cc = tif_cc_Tzofar)
 rast_cc_h_eh_i = rast_cc(tif_cc = tif_cc_H_EH_I )
 
-col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
-#lev = levels(training_data_L5$ground_type)
+# col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
+# #lev = levels(training_data_L5$ground_type)
+# 
+# #plot to pdf all classified rasters by yishuv
+# pdf(file ="./output/Hazeva.pdf", width = 9.5, height = 5)
+# plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
+# dev.off()
+# pdf(file ="./output/Ein_Yahav.pdf", width = 5.5, height = 6)
+# plot(rast_cc_ein_yahav, col = col, legend = FALSE)#type = "classes", levels = lev)
+# dev.off()
+# pdf(file ="./output/Paran.pdf", width = 6.5, height = 5)
+# plot(rast_cc_paran, col = col, legend = FALSE)#type = "classes", levels = lev)
+# dev.off()
+# pdf(file ="./output/Tzofar.pdf", width = 5, height = 7)
+# plot(rast_cc_tzofar, col = col, legend = FALSE)#type = "classes", levels = lev)
+# dev.off()
+# pdf(file ="./output/h_eh_i.pdf", width = 7, height = 6.5)
+# plot(rast_cc_h_eh_i, col = col, legend = FALSE)#type = "classes", levels = lev)
+# dev.off()
 
-#plot to pdf all classified rasters by yishuv
-pdf(file ="./output/Hazeva.pdf", width = 9.5, height = 5)
-plot(rast_cc_hazeva, col = col, legend = FALSE)#type = "classes", levels = lev )
-dev.off()
-pdf(file ="./output/Ein_Yahav.pdf", width = 5.5, height = 6)
-plot(rast_cc_ein_yahav, col = col, legend = FALSE)#type = "classes", levels = lev)
-dev.off()
-pdf(file ="./output/Paran.pdf", width = 6.5, height = 5)
-plot(rast_cc_paran, col = col, legend = FALSE)#type = "classes", levels = lev)
-dev.off()
-pdf(file ="./output/Tzofar.pdf", width = 5, height = 7)
-plot(rast_cc_tzofar, col = col, legend = FALSE)#type = "classes", levels = lev)
-dev.off()
-pdf(file ="./output/h_eh_i.pdf", width = 7, height = 6.5)
-plot(rast_cc_h_eh_i, col = col, legend = FALSE)#type = "classes", levels = lev)
+df_hazeva = raster_to_df(rast_cc_hazeva)
+df_ein_yahav = raster_to_df(rast_cc_ein_yahav)
+df_paran = raster_to_df(rast_cc_paran)
+df_h_eh_i = raster_to_df(rast_cc_h_eh_i)
+df_tzopar = raster_to_df(rast_cc_tzofar)
+
+
+pdf("./output/hazeva_18_1.pdf", width = 12, height = 8)
+ggplot()+
+  geom_raster(data = df_hazeva, aes(x=x, y=y, fill = value_c))+
+  facet_wrap(~variable)+
+  scale_fill_manual(name = "Land Cover Classes",
+                    values = c("Dark GH" = "gray",
+                               "Light GH" = "lightskyblue1",
+                               "Open Ground" = "navajowhite1",
+                               "Orchard and Vegetation" = "dark green"))+
+  coord_fixed(ratio = 1)+
+  theme(legend.position="bottom")
 dev.off()
 
+pdf("./output/ein_yahav_18.pdf", width = 10, height = 12)
+ggplot()+
+  geom_raster(data = df_ein_yahav, aes(x=x, y=y, fill = value_c))+
+  facet_wrap(~variable)+
+  scale_fill_manual(name = "Land Cover Classes",
+                    values = c("Dark GH" = "gray",
+                               "Light GH" = "lightskyblue1",
+                               "Open Ground" = "navajowhite1",
+                               "Orchard and Vegetation" = "dark green"))+
+  coord_fixed(ratio = 1) +
+  theme(legend.position="bottom")
+dev.off()
+
+pdf("./output/paran_18.pdf", width = 10, height = 10)
+ggplot()+
+  geom_raster(data = df_paran, aes(x=x, y=y, fill = value_c))+
+  facet_wrap(~variable)+
+  scale_fill_manual(name = "Land Cover Classes",
+                    values = c("Dark GH" = "gray",
+                               "Light GH" = "lightskyblue1",
+                               "Open Ground" = "navajowhite1",
+                               "Orchard and Vegetation" = "dark green"))+
+  coord_fixed(ratio = 1)+
+  theme(legend.position="bottom")
+dev.off()
+
+pdf("./output/h_eh_i_18.pdf", width = 12, height = 12)
+ggplot()+
+  geom_raster(data = df_h_eh_i, aes(x=x, y=y, fill = value_c))+
+  facet_wrap(~variable)+
+  scale_fill_manual(name = "Land Cover Classes",
+                    values = c("Dark GH" = "gray",
+                               "Light GH" = "lightskyblue1",
+                               "Open Ground" = "navajowhite1",
+                               "Orchard and Vegetation" = "dark green"))+
+  coord_fixed(ratio = 1)+
+  theme(legend.position="bottom")
+dev.off()
+
+
+#comes out really small need to add more "background"
+pdf("./output/tzofar_18.pdf", width = 12, height = 8)
+ggplot()+
+  geom_raster(data = df_tzopar, aes(x=x, y=y, fill = value_c))+
+  facet_wrap(~variable)+
+  scale_fill_manual(name = "Land Cover Classes",
+                    values = c("Dark GH" = "gray",
+                               "Light GH" = "lightskyblue1",
+                               "Open Ground" = "navajowhite1",
+                               "Orchard and Vegetation" = "dark green"))+
+  coord_fixed(ratio = 1)+
+  theme(legend.position="bottom")
+dev.off()
 
 #makes a freqency table for each yishuv
 frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
