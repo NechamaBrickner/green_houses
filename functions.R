@@ -196,4 +196,15 @@ frequency_table = function(tif_cc, yishuv){
   return(ft)
 }
 
-
+raster_to_df = function(rast_to_df) { 
+  df = as.data.frame(rast_to_df, xy = TRUE) %>%
+    melt(id.vars = c("x", "y")) %>%
+    mutate(value_c = value)
+  
+  df$value_c = as.character(df$value_c)
+  df["value_c"][df["value_c"] == 1] = "Dark GH"
+  df["value_c"][df["value_c"] == 2] = "Open Ground"
+  df["value_c"][df["value_c"] == 3] = "Light GH"
+  df["value_c"][df["value_c"] == 4] = "Orchard and Vegetation"
+  return(df)
+}
