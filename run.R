@@ -534,12 +534,28 @@ ft_all = frequency_table_all %>%
   mutate(yishuv_name = substr(name,1,nchar(name)-5))
 ft_all %>%
   ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line()+
+  geom_line(size = 1.2)+
   facet_wrap(~yishuv_name)+
   scale_color_manual(name ="Land Cover Class",
                      values = c("Dark GH" = "gray28",
                                 "Light GH"="lightskyblue1",
-                                "Orchard and Vegetation" = "dark green"))
+                                "Orchard and Vegetation" = "dark green"))+
+  labs(title = "Number of Pixels for Each Land Cover Class \n by Year for Yishuv")+
+  ylab("Number of Pixels")+
+  xlab("Year")
+  
+
+ft_all %>%
+  ggplot(aes(x=years, y=porportion, group=value, color=value)) +
+  geom_line(size = 1.2)+
+  facet_wrap(~yishuv_name)+
+  scale_color_manual(name ="Land Cover Class",
+                     values = c("Dark GH" = "gray28",
+                                "Light GH"="lightskyblue1",
+                                "Orchard and Vegetation" = "dark green"))+
+  labs(title = "Percent Land Cover by Year for Yishuv")+
+  ylab("Percent Land Cover")+
+  xlab("Year")
   
 
 # ft_h = frequency_table_hazeva %>%
