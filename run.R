@@ -441,15 +441,15 @@ df_tzopar = raster_to_df(rast_cc_tzofar)
 #             layer="yishuv_areas_b500")
 # b_h = b[1, ]
 
-pdf("./output/hazeva_18_n.pdf", width = 12, height = 8)
+pdf("./output/hazeva_18_n.pdf", width = 14, height = 10)
 ggplot()+
   geom_raster(data = df_hazeva, aes(x=x, y=y, fill = value_c))+
   facet_wrap(~variable)+
   scale_fill_manual(name = "Land Cover Classes",
-                    values = c("Dark GH" = "gray",
+                    values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
                                "Open Ground" = "navajowhite1",
-                               "Orchard and Vegetation" = "dark green"))+
+                               "Orchard and Vegetation" = "forestgreen"))+
   coord_fixed(ratio = 1)+
   theme(legend.position="bottom")+
   #geom_sf(fill = "transparent", data = b_h) #changes the coords to geo
@@ -462,40 +462,40 @@ ggplot()+
   geom_raster(data = df_ein_yahav, aes(x=x, y=y, fill = value_c))+
   facet_wrap(~variable)+
   scale_fill_manual(name = "Land Cover Classes",
-                    values = c("Dark GH" = "gray",
+                    values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
                                "Open Ground" = "navajowhite1",
-                               "Orchard and Vegetation" = "dark green"))+
+                               "Orchard and Vegetation" = "forestgreen"))+
   coord_fixed(ratio = 1) +
   theme(legend.position="bottom")+
   scale_x_continuous(breaks = seq(712500, 717500, by = 2500))+
   scale_y_continuous(breaks = seq(3390000,3400000, by = 2500))
 dev.off()
 
-pdf("./output/paran_18_n.pdf", width = 10, height = 10)
+pdf("./output/paran_18_n.pdf", width = 12, height = 10)
 ggplot()+
   geom_raster(data = df_paran, aes(x=x, y=y, fill = value_c))+
   facet_wrap(~variable)+
   scale_fill_manual(name = "Land Cover Classes",
-                    values = c("Dark GH" = "gray",
+                    values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
                                "Open Ground" = "navajowhite1",
-                               "Orchard and Vegetation" = "dark green"))+
+                               "Orchard and Vegetation" = "forestgreen"))+
   coord_fixed(ratio = 1)+
   theme(legend.position="bottom")+
   scale_x_continuous(breaks = seq(705000, 709000, by = 2000))+
   scale_y_continuous(breaks = seq(3360000,3364000, by = 2000))
 dev.off()
 
-pdf("./output/h_eh_i_18_n.pdf", width = 12, height = 12)
+pdf("./output/h_eh_i_18_n.pdf", width = 14, height = 14)
 ggplot()+
   geom_raster(data = df_h_eh_i, aes(x=x, y=y, fill = value_c))+
   facet_wrap(~variable)+
   scale_fill_manual(name = "Land Cover Classes",
-                    values = c("Dark GH" = "gray",
+                    values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
                                "Open Ground" = "navajowhite1",
-                               "Orchard and Vegetation" = "dark green"))+
+                               "Orchard and Vegetation" = "forestgreen"))+
   coord_fixed(ratio = 1)+
   theme(legend.position="bottom")+
   scale_x_continuous(breaks = seq(712500, 722500, by = 2500))+
@@ -504,15 +504,15 @@ dev.off()
 
 
 #comes out really small need to add more "background"
-pdf("./output/tzofar_18_n1.pdf", width = 8, height = 12)
+pdf("./output/tzofar_18_n1.pdf", width = 8, height = 10)
 ggplot()+
   geom_raster(data = df_tzopar, aes(x=x, y=y, fill = value_c))+
   facet_wrap(~variable)+
   scale_fill_manual(name = "Land Cover Classes",
-                    values = c("Dark GH" = "gray",
+                    values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
                                "Open Ground" = "navajowhite1",
-                               "Orchard and Vegetation" = "dark green"))+
+                               "Orchard and Vegetation" = "forestgreen"))+
   coord_fixed(ratio = 1)+
   theme(legend.position="bottom")+
   scale_x_continuous(breaks = seq(707500, 712500, by = 2000))+
