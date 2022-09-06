@@ -47,6 +47,9 @@ full_area = vect(file.path(GIS_dir, "greenhouses.gpkg"),
 #' 
 #' names(crop_rasters_td) <- basename(tif_dirs_full) #gives the name of the image by the date...
 
+# years = c("1985", "1987", "1990", "1993", "1995", "1996", "1997", "2000", "2002", "2005",
+#           "2006", "2009", "2010", "2014", "2015", "2017", "2020", "2022")
+
 years <- list.dirs(datasets_dir,
                    full.names = FALSE, # Now we want only the year, NOT the full path
                    recursive = FALSE)
@@ -532,17 +535,20 @@ frequency_table_all = rbind(frequency_table_hazeva, frequency_table_h_eh_i, freq
 ft_all = frequency_table_all %>%
   filter(value != "Open Ground") %>%
   mutate(yishuv_name = substr(name,1,nchar(name)-5))
+pdf("./output/pixel_by_class.pdf", width = 10, height = 7)
 ft_all %>%
   ggplot(aes(x=years, y=count, group=value, color=value)) +
-  geom_line(size = 1.2)+
+  geom_line(size = 1.2, alpha = 0.7)+
   facet_wrap(~yishuv_name)+
   scale_color_manual(name ="Land Cover Class",
-                     values = c("Dark GH" = "gray28",
-                                "Light GH"="lightskyblue1",
-                                "Orchard and Vegetation" = "dark green"))+
+                     values = c("Dark GH" = "salmon3",
+                                "Light GH"="turquoise3",
+                                "Orchard and Vegetation" = "forestgreen"))+
   labs(title = "Number of Pixels for Each Land Cover Class \n by Year for Yishuv")+
   ylab("Number of Pixels")+
-  xlab("Year")
+  xlab("Year")+
+  theme(plot.title=element_text(hjust=0.5))
+dev.off()
   
 
 ft_all %>%
