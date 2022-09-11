@@ -143,3 +143,28 @@ albedo_band = function(cropped) {
   albedo = (cropped$blue*0.356 + cropped$red*0.13 + cropped$NIR*0.373 + cropped$SWIR1*0.085+ cropped$SWIR2*0.072 - 0.0018)/1.016
   return(albedo)
 }
+
+# Create mask matrix of changes between two categorical input rasters
+changes_mask <- function(rastA, rastB) {
+  library(terra)
+  num_classes <- length(unique(values(rastA)))
+  #print(num_classes)
+  return(rastA*num_classes + rastB)
+}
+
+#Test of changes_mask function
+m <- 6   # rows
+n <- 12  # columns
+classes <- 4
+MatA <-  matrix(sample.int(classes, m*n, replace=TRUE)-1, nrow=m, ncol=n)
+MatB <-  matrix(sample.int(classes, m*n, replace=TRUE)-1, nrow=m, ncol=n)
+rastA <-  rast(MatA)
+rastB <- rast(MatB)
+rast_mask = changes_mask(rastA, rastB)
+
+print(paste("Max:",max(values(rast_mask)), "Min:", min(values(rast_mask))))
+opar <- par(mfrow=c(3,1))
+plot(rastA)
+plot(rastB)
+plot(rast_mask)
+par <- opar
