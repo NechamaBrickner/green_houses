@@ -460,10 +460,10 @@ ggplot()+
   scale_y_continuous(breaks = seq(3402500,3410000, by = 2000))
 dev.off()
 
-pdf("./output/ein_yahav_18_n.pdf", width = 10, height = 12)
+pdf("./output/ein_yahav_18_n2.pdf", width = 11, height = 9)
 ggplot()+
   geom_raster(data = df_ein_yahav, aes(x=x, y=y, fill = value_c))+
-  facet_wrap(~variable)+
+  facet_wrap(~variable, ncol = 6)+
   scale_fill_manual(name = "Land Cover Classes",
                     values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
@@ -507,10 +507,10 @@ dev.off()
 
 
 #comes out really small need to add more "background"
-pdf("./output/tzofar_18_n1.pdf", width = 8, height = 10)
+pdf("./output/tzofar_18_n2.pdf", width = 8, height = 10)
 ggplot()+
   geom_raster(data = df_tzopar, aes(x=x, y=y, fill = value_c))+
-  facet_wrap(~variable)+
+  facet_wrap(~variable, ncol = 6)+
   scale_fill_manual(name = "Land Cover Classes",
                     values = c("Dark GH" = "salmon3",
                                "Light GH" = "lightskyblue1",
