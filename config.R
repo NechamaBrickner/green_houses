@@ -82,6 +82,13 @@ classified_cropped_dir = "./output/Classified_cropped"
 if (!dir.exists(classified_cropped_dir)) {
   dir.create(classified_cropped_dir)
 }
+
+# folder for change detection 
+change_detection_dir = "./output/change_detection"
+if (!dir.exists(change_detection_dir)) {
+  dir.create(change_detection_dir)
+}
+
 # folder for  LST output
 LST_dir = "./output/LST"
 if (!dir.exists(LST_dir)) {
