@@ -630,12 +630,89 @@ ft_all %>%
 #   return(ft)
 # })
 
+# Change Detection 
+
+CD_hazeva = change_detection(rast = rast_cc_hazeva)
+CD_ein_yahav = change_detection(rast = rast_cc_ein_yahav)
+CD_paran = change_detection(rast = rast_cc_paran)
+CD_h_eh_i = change_detection(rast = rast_cc_h_eh_i)
+CD_tzofar = change_detection(rast = rast_cc_tzofar)
+
+
+df_hazeva_cd = raster_2_df_CD(CD_hazeva)
+df_ein_yahav_cd = raster_2_df_CD(CD_ein_yahav)
+df_paran_cd = raster_2_df_CD(CD_paran)
+df_h_eh_i_cd = raster_2_df_CD(CD_h_eh_i)
+df_tzopar_cd = raster_2_df_CD(CD_tzofar)
+
+pdf("./output/hazeva_cd_17_1.pdf", width = 14, height = 8)
+ggplot()+
+  geom_raster(data = df_hazeva_cd, aes(x=x, y=y, fill = cover))+
+  facet_wrap(~variable)+
+  scale_fill_color_pal("light24")+
+  coord_fixed(ratio = 1)+
+  #theme(legend.position="bottom")+
+  scale_x_continuous(breaks = seq(712500, 722500, by = 2000))+
+  scale_y_continuous(breaks = seq(3402500,3410000, by = 2000))
+dev.off()
+
+pdf("./output/ein_yahav_cd_17_1.pdf", width = 11, height = 7)
+ggplot()+
+  geom_raster(data = df_ein_yahav_cd, aes(x=x, y=y, fill = cover))+
+  facet_wrap(~variable, ncol = 6)+
+  scale_fill_color_pal("light24")+
+  coord_fixed(ratio = 1) +
+  #theme(legend.position="bottom")+
+  scale_x_continuous(breaks = seq(712500, 717500, by = 2500))+
+  scale_y_continuous(breaks = seq(3390000,3400000, by = 2500))
+dev.off()
+
+pdf("./output/paran_cd_17_1.pdf", width = 12, height = 8)
+ggplot()+
+  geom_raster(data = df_paran_cd, aes(x=x, y=y, fill = cover))+
+  facet_wrap(~variable)+
+  scale_fill_color_pal("light24")+
+  coord_fixed(ratio = 1)+
+  #theme(legend.position="bottom")+
+  scale_x_continuous(breaks = seq(705000, 709000, by = 2000))+
+  scale_y_continuous(breaks = seq(3360000,3364000, by = 2000))
+dev.off()
+
+pdf("./output/h_eh_i_cd_17_1.pdf", width = 14, height = 12)
+ggplot()+
+  geom_raster(data = df_h_eh_i_cd, aes(x=x, y=y, fill = cover))+
+  facet_wrap(~variable)+
+  scale_fill_color_pal("light24")+
+  coord_fixed(ratio = 1)+
+  #theme(legend.position="bottom")+
+  scale_x_continuous(breaks = seq(712500, 722500, by = 2500))+
+  scale_y_continuous(breaks = seq(3402500,3415000, by = 2500))
+dev.off()
+
+
+#comes out really small need to add more "background"
+pdf("./output/tzofar_cd_17_1.pdf", width = 8, height = 8)
+ggplot()+
+  geom_raster(data = df_tzopar_cd, aes(x=x, y=y, fill = cover))+
+  facet_wrap(~variable, ncol = 6)+
+  scale_fill_color_pal("light24")+
+  coord_fixed(ratio = 1)+
+  #theme(legend.position="bottom")+
+  scale_x_continuous(breaks = seq(707500, 712500, by = 2000))+
+  scale_y_continuous(breaks = seq(3378000,3388000, by = 2000))
+dev.off()
+
+#change function to get yishuv name from config
+CD_sum_hazeva = change_sum(rast = rast_cc_hazeva)
+CD_sum_ein_yahav = change_sum(rast = rast_cc_ein_yahav)
+CD_sum_paran = change_sum(rast = rast_cc_paran)
+CD_sum_h_eh_i = change_sum(rast = rast_cc_h_eh_i)
+CD_sum_tzofar = change_sum(rast = rast_cc_tzofar)
+
 #'---------------------------------
 #' Completed
 #'---------------------------------
 t2 = Sys.time()
 elapsed = round(difftime(t2, t0, units = "mins"),2)
 print(paste(t2, "-- End process in", elapsed, "minutes"))
-
-
 
