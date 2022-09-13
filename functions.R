@@ -208,3 +208,80 @@ raster_to_df = function(rast_to_df) {
   df["value_c"][df["value_c"] == 4] = "Orchard and Vegetation"
   return(df)
 }
+
+
+#change detection functions
+
+#calculates the change between 2 raster to 16 classes (5-20)
+changes_mask <- function(rastA, rastB) {
+  num_classes1 <- unique(values(rastA))
+  num_classes1 = na.omit(num_classes1)
+  num_classes <- length(num_classes1)
+  #print(num_classes)
+  return(rastA*num_classes + rastB)
+}
+
+#loops through a multiband raster and calculates the change and save the rasters
+change_detection = function(rast) {
+  for (i in 1:(nlyr(rast)-1)) {
+    rast1 = rast[[i]]
+    rast2 = rast[[(i +1)]]
+    CD_1 = changes_mask2(rastA = rast1, rastB = rast2)
+    names(CD_1) = paste("CD", names(rast1), names(rast2), sep = "_") 
+    plot(CD_1)
+    rastname = paste("CD", names(rast1), names(rast2), sep = "_")
+    rastpath <- file.path(change_detection_dir, paste0(rastname, ".tif"))
+    writeRaster(x = CD_1, filename = rastpath,
+                overwrite = TRUE)
+    if (i == 1) {
+      CD = CD_1
+    } else {
+      CD = c(CD, CD_1)
+    }
+  }
+  return(CD)
+} 
+
+#table with the change classes
+change_classes = data.frame(id = 5:20, cover = c("Dark GH", "Dark GH to Open Ground", "Dark GH to Light GH", 
+                                                 "Dark GH to Orchard & Vegetation",
+                                                 "Open Ground to Dark GH",  "Open Ground", "Open Ground to Light GH", 
+                                                 "Open Ground to Orchard & Vegetation","Light GH to Dark GH", 
+                                                 "Light GH to Open Ground", "Light GH", "Light GH to Orchard & Vegetation",
+                                                 "Orchard & Vegetation to Dark GH", "Orchard & Vegetation to Open Ground", 
+                                                 "Orchard & Vegetation to Light GH", "Orchard & Vegetation"))
+
+#turns the Change raster to a dataframe to plot, uses the change class to get classes
+raster_2_df_CD = function(rast_2_df){
+   df = as.data.frame(rast_2_df, xy = TRUE) %>%
+     melt(id.vars = c("x", "y"))%>%
+     left_join(change_classes, by = c("value" = "id"))
+}
+
+
+
+#checks if the pixel changes and sums all the change (
+#final is a single band raster with the number of times the pixel changed)  
+change_sum = function(rast) {
+  for (i in 1:(nlyr(rast)-1)) {
+    rast1 = rast[[i]]
+    rast2 = rast[[(i +1)]]
+    cd1 = change(rastA = rast1, rastB = rast2)
+    #plot(cd1)
+    if (i == 1) {
+      CD = cd1
+    } else {
+      CD = c(CD, cd1)
+    }
+  }
+  cd_sum = app(CD, sum)
+  name_split <- strsplit(x=names(rast1), split = "_", fixed = TRUE)
+  name <- unlist(name_split)[1]
+  rastname = paste0("CD_sum_", name)
+  rastpath <- file.path(change_detection_dir, paste0(rastname, ".tif"))
+  writeRaster(x = cd_sum, filename = rastpath,
+              overwrite = TRUE)
+  plot(cd_sum, main = rastname)
+  return(cd_sum)
+}
+
