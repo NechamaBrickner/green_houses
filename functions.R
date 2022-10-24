@@ -1,37 +1,48 @@
-DownloadLandsat <- function(area, date_ranges_file){
-
-  #----------------------
-  # This is not working! 
-  #----------------------
-
-  # Configs for getSpatialData
-  #
-  set_aoi(as_Spatial(area))
-  set_archive(dataset_dir)
-  # Login credentials prepared in advance, and saved to RDS file
-  creds <- readRDS("credentials.rds")
-  login_USGS(username=creds$username, password=creds$passwd)
-  date_ranges <- read.csv("date_ranges.csv")
-  tif_dir_list <- lapply(1:nrow(date_ranges), function(r){
-                       from_date = as.character(date_ranges[r,1])
-                       to_date = as.character(date_ranges[r, 2])
-                       time_range=c(from_date, to_date)
-                       rec8 = getLandsat_records(time_range=time_range,
-                           products = c("landsat_8_c1"),
-                       )
-                       if (length(rec8) != 0) {
-                           getLandsat_data(rec8)
-                       }
-                      rec5 = getLandsat_records(time_range,
-                           products = c("landsat_tm_c2_l1")
-                       )
-                      if (length(rec5) != 0) {
-                          getLandat_data(rec5)
-                      }
-  })
-}
+#functions
 
 
+#function to downlod landsat images using getspatialdatat library
+# doesn't work!
+# DownloadLandsat <- function(area, date_ranges_file){
+# 
+#   #----------------------
+#   # This is not working! 
+#   #----------------------
+# 
+#   # Configs for getSpatialData
+#   #
+#   set_aoi(as_Spatial(area))
+#   set_archive(dataset_dir)
+#   # Login credentials prepared in advance, and saved to RDS file
+#   creds <- readRDS("credentials.rds")
+#   login_USGS(username=creds$username, password=creds$passwd)
+#   date_ranges <- read.csv("date_ranges.csv")
+#   tif_dir_list <- lapply(1:nrow(date_ranges), function(r){
+#                        from_date = as.character(date_ranges[r,1])
+#                        to_date = as.character(date_ranges[r, 2])
+#                        time_range=c(from_date, to_date)
+#                        rec8 = getLandsat_records(time_range=time_range,
+#                            products = c("landsat_8_c1"),
+#                        )
+#                        if (length(rec8) != 0) {
+#                            getLandsat_data(rec8)
+#                        }
+#                       rec5 = getLandsat_records(time_range,
+#                            products = c("landsat_tm_c2_l1")
+#                        )
+#                       if (length(rec5) != 0) {
+#                           getLandat_data(rec5)
+#                       }
+#   })
+# }
+
+
+# function to crop the images 
+# slects the bands by landsat type (uses tif name)
+# create a stack of images using the wanted bands
+# gives each band a name - color
+# crops and masks the stack using the study area
+# scale each band using the scale factor
 
 CropDatasets <- function(tif_list, study_area) {
   # Read list of TIF files into stack
@@ -70,7 +81,9 @@ CropDatasets <- function(tif_list, study_area) {
   return(cropped)
 }
 
-
+# function to add texture and index bands
+# gives each new band a name
+# create a stack with all the bands (cropped, texture and index)
 AddImageTexture <- function(cropped) {
   # Run glcm() function to create image texture raster
   # Choose one band for glcm, i.e. green
@@ -115,40 +128,46 @@ AddImageTexture <- function(cropped) {
 #   st_write(superpxl, shppath, append = FALSE) #save the superpixel as a gpkg file, and overwrite if the file already exists 
 # }
 
-LST_band = function(tif_list, study_area) {
-  
-  if (length(grep(pattern = "LT05", tif_list, fixed = TRUE)) > 0) {
-    #select thermal band landsat 5 - B6
-    LST_05 <- tif_list[grep(pattern="LT05_", x = tif_list)]
-    LST_05 <- LST_05[grep(pattern="ST", x = LST_05)]
-    LST_05 <- LST_05[grep(pattern = "B6", x = LST_05)]  
-    LST <- rast(LST_05)
-  }
-  else {
-    #select thermal band landsat 8 - B10
-    LST_08 <- tif_list[grep(pattern="LC08_", x=tif_list)]
-    LST_08 <- LST_08[grep(pattern="ST", x=LST_08)]
-    LST_08 <- LST_08[grep(pattern = "B10", x = LST_08)] 
-    LST <- rast(LST_08)
-  }
-  names(LST) <- "LST"
-  cropped <- crop(LST, study_area)
-  #rescale factor for theral band
-  # landsat 8 https://prd-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/atoms/files/LSDS-1619_Landsat-8-Collection2_Level-2_Science-Product-Guide-v3.pdf
-  # landsat 5 https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/LSDS-1618_Landsat-4-7_C2-L2-ScienceProductGuide-v4.pdf
-  cropped = cropped*0.00341802+149.0-272.15 
- 
-  return(cropped)
-}
+# # create LST band 
+# # select the correct band 
+# # crop to study area
+# # scale using the scaling factor
+# 
+# LST_band = function(tif_list, study_area) {
+#   
+#   if (length(grep(pattern = "LT05", tif_list, fixed = TRUE)) > 0) {
+#     #select thermal band landsat 5 - B6
+#     LST_05 <- tif_list[grep(pattern="LT05_", x = tif_list)]
+#     LST_05 <- LST_05[grep(pattern="ST", x = LST_05)]
+#     LST_05 <- LST_05[grep(pattern = "B6", x = LST_05)]  
+#     LST <- rast(LST_05)
+#   }
+#   else {
+#     #select thermal band landsat 8 - B10
+#     LST_08 <- tif_list[grep(pattern="LC08_", x=tif_list)]
+#     LST_08 <- LST_08[grep(pattern="ST", x=LST_08)]
+#     LST_08 <- LST_08[grep(pattern = "B10", x = LST_08)] 
+#     LST <- rast(LST_08)
+#   }
+#   names(LST) <- "LST"
+#   cropped <- crop(LST, study_area)
+#   #rescale factor for theral band
+#   # landsat 8 https://prd-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/atoms/files/LSDS-1619_Landsat-8-Collection2_Level-2_Science-Product-Guide-v3.pdf
+#   # landsat 5 https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/LSDS-1618_Landsat-4-7_C2-L2-ScienceProductGuide-v4.pdf
+#   cropped = cropped*0.00341802+149.0-272.15 
+#  
+#   return(cropped)
+# }
 
-
-albedo_band = function(cropped) {
-  albedo = (cropped$blue*0.356 + cropped$red*0.13 + cropped$NIR*0.373 + cropped$SWIR1*0.085+ cropped$SWIR2*0.072 - 0.0018)/1.016
-  return(albedo)
-}
+# # calculate albedo band 
+# albedo_band = function(cropped) {
+#   albedo = (cropped$blue*0.356 + cropped$red*0.13 + cropped$NIR*0.373 + cropped$SWIR1*0.085+ cropped$SWIR2*0.072 - 0.0018)/1.016
+#   return(albedo)
+# }
 
 
 ## probably need to change the number of characters that r being erased
+# creates a raster out of a tiff list
 rast_cc = function(tif_cc){
   #gets name of pic with out .tif at end and ./croppped/ at begining
   name = substr(tif_cc,1,nchar(tif_cc)-18)
@@ -161,7 +180,9 @@ rast_cc = function(tif_cc){
   return(r_tif_cc)
 }
 
-#create a table with the frequency of each ground type in every raster, takes raster list and yishuv
+# create a table with the frequency of each ground type in every raster
+# takes raster list and yishuv
+# saves the table
 frequency_table = function(tif_cc, yishuv){
   #gets name of pic with out .tif at end and ./croppped/ at begining
   name = substr(tif_cc,1,nchar(tif_cc)-18)
@@ -196,6 +217,7 @@ frequency_table = function(tif_cc, yishuv){
   return(ft)
 }
 
+#functiom that turns a raster to dataframe
 raster_to_df = function(rast_to_df) { 
   df = as.data.frame(rast_to_df, xy = TRUE) %>%
     melt(id.vars = c("x", "y")) %>%
