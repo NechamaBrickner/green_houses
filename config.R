@@ -107,6 +107,7 @@ if (!dir.exists(albedo_dir)) {
 #   dir.create(classified_dir)
 # }
 
+# name for landsat to use when naming and saving files...
 landsat5 = "l5"
 landsat8 = "l8"
 
@@ -114,4 +115,5 @@ landsat8 = "l8"
 bands_l5=c("blue","NIR","SWIR1", "variance", "NDVI", "BSI", "NDBI")
 bands_l8=c("green", "NIR","SWIR2", "variance", "NDVI", "BSI", "NDBI")
 
+# names of the yishuvim
 yishuv_n = c("hazeva", "ein_yahav", "paran", "tzofar", "h_eh_i")
