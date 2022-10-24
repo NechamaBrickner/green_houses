@@ -50,12 +50,15 @@ full_area = vect(file.path(GIS_dir, "greenhouses.gpkg"),
 # years = c("1985", "1987", "1990", "1993", "1995", "1996", "1997", "2000", "2002", "2005",
 #           "2006", "2009", "2010", "2014", "2015", "2017", "2020", "2022")
 
+# gets a list of years of images
 years <- list.dirs(datasets_dir,
                    full.names = FALSE, # Now we want only the year, NOT the full path
                    recursive = FALSE)
+# gets a list of the full dir (up to each year not image)
 year_dirs <- list.dirs(datasets_dir,
                        full.names = TRUE,
                        recursive = FALSE)
+
 names(year_dirs) <- years
 # Now the list "cropped_rasters_list" is a "named list" 
 #----------------------------------------------------------
@@ -66,11 +69,14 @@ names(year_dirs) <- years
 #my attempt to add another lapply to go 1 level in, did not work
 # i also subset the original tif_dirs_full to only have the folders of years
 
+# goes through the year dirs 
+# then for each dir it goes in to each image and crops and adds texture bands
+# then for all the images in the year dir are averaged to get 1 image for year
 
-crop_rasters <- lapply(1:length(years), function(fidx) {
+crop_rasters <- lapply(1:length(years), function(fidx) { 
   year_dir <- year_dirs[[fidx]]
   #folder1 = tif_dirs_full_year[folder]
-  year_dataset_list <- lapply(year_dir, function(d){
+  year_dataset_list <- lapply(year_dir, function(d){ 
     #    folder2 = folder1[d]
     #Get list of TIF files in each dir
     year_dataset_list = list.dirs(d, full.names = TRUE, recursive = FALSE)
@@ -96,7 +102,7 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
     l = sds(final_list)
     final_stack = app(l, mean, na.rm = TRUE)
     
-    #save the images (after cropped, texture, index and mear per year )
+    #save the images (after cropped, texture, index and mean per year )
           rastname = paste("Full_Area", years[fidx], sep="_")
           rastpath <- file.path(fullarea_dir, paste0(rastname, ".tif"))
           terra::writeRaster(x= final_stack,
@@ -106,13 +112,14 @@ crop_rasters <- lapply(1:length(years), function(fidx) {
 })
 #}
 
-#? will this give the right name
+# names each raster in the list with the correct name- acording to year
 names(crop_rasters) = paste0("fullarea", years)
 
 #split the raster "list" intp 2 groups by landsat
 # the numbers will change depending on the number of images 
 ###computer at the lab, need to change to work with images i have
 
+#split the raster "list" intp 2 groups by landsat
 # uses the list of years in numeric form as a index
 # removes the use of a specific index 
 
@@ -125,13 +132,15 @@ crop_rasters_l8 = crop_rasters[as.numeric(years) >= 2013]
 # #my computer
 # crop_rasters_l5 = crop_rasters[3:4]
 # crop_rasters_l8 = crop_rasters[1:2]
+
+
 #'---------------------------------
 #' Random Forest classification
 #'---------------------------------
 # crop_rasters list holds *all* dates with 9 bands each
 # Select only 1 for RF
 
-#load the training poinys for each model
+#load the training points  from geopackage for each model
 training_data_l5 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
                            layer="td_L5")
 training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
@@ -150,6 +159,7 @@ rast_4_RF_l5 = crop_rasters$fullarea2002
 rast_4_RF_l8 = crop_rasters$fullarea2020
 
 #create the training data for each model
+# r = raster used, training_data = training points, bands = bands used
 training_data_L5 = CreateTrainingDF(r = rast_4_RF_l5, training_data = training_data_l5, bands = bands_l5)
 training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_data_l8, bands = bands_l8)
 
@@ -219,6 +229,7 @@ training_data_L8 = CreateTrainingDF(r = rast_4_RF_l8, training_data = training_d
 
 # Prepare the random forest model
 set.seed(12)
+# traing_data = uses the training datathat was created, mod_name = name for the model
 RFmodel_l5 = Prepare_RF_Model(training_data = training_data_L5, mod_name = landsat5)
 RFmodel_l8 = Prepare_RF_Model(training_data = training_data_L8, mod_name = landsat8)
 
@@ -274,7 +285,8 @@ tif_cropped_l8 = tif_cropped[as.numeric(years) >= 2013]
 #   return(rast_classify)
 # })
 
-
+# classifies the rastes using the random forset model
+# tif_croped = list of tiff to classify, bands = bands to use, fit = name of the model, landsat = which landsat was used
 classified_rasters_l5 = classified_rasters(tif_cropped = tif_cropped_l5, 
                                            bands = bands_l5, fit = RFmodel_l5, landsat = landsat5)
 classified_rasters_l8 = classified_rasters(tif_cropped = tif_cropped_l8, 
@@ -331,10 +343,12 @@ tif_classified_l5 <- tif_classified[grep(pattern = "l5", x = tif_classified)]  #
 tif_classified_l8 <- tif_classified[grep(pattern = "l8", x = tif_classified)]
 
 
+# load the areas of each yishuv from the geopackage 
 buffer500 = vect(file.path(GIS_dir, "greenhouses.gpkg"),
                  layer="yishuv_areas_b500")
-yishuv_mask = vect(file.path(GIS_dir, "greenhouses.gpkg"),
-                   layer="yishuv_mask")
+# load a mask layer 
+# yishuv_mask = vect(file.path(GIS_dir, "greenhouses.gpkg"),
+#                    layer="yishuv_mask")
 
 # #loop to crop the classified images to the study area and mask out the yishuv
 # crop_classified_rasters_l5 <- lapply(buffer500$name, function(sa){
@@ -406,13 +420,15 @@ tif_cc_Tzofar <- tif_crop_classified[grep(pattern = "Tzofar", x = tif_crop_class
 tif_cc_H_EH_I <- tif_crop_classified[grep(pattern = "Idan", x = tif_crop_classified)]  #takes only... by pattern
 
 
-#multiband raster of all cropped classified rasters by yishuv
+# create a multiband raster of all cropped classified rasters by yishuv
 rast_cc_hazeva = rast_cc(tif_cc = tif_cc_Hazeva)
 rast_cc_ein_yahav = rast_cc(tif_cc = tif_cc_Ein_Yahav)
 rast_cc_paran = rast_cc(tif_cc = tif_cc_Paran)
 rast_cc_tzofar = rast_cc(tif_cc = tif_cc_Tzofar)
 rast_cc_h_eh_i = rast_cc(tif_cc = tif_cc_H_EH_I )
 
+
+#old plots cn only plot up to 16 "subplots"
 # col = c("gray", "navajowhite1", "lightskyblue1", "dark green")
 # #lev = levels(training_data_L5$ground_type)
 # 
@@ -433,6 +449,7 @@ rast_cc_h_eh_i = rast_cc(tif_cc = tif_cc_H_EH_I )
 # plot(rast_cc_h_eh_i, col = col, legend = FALSE)#type = "classes", levels = lev)
 # dev.off()
 
+# create a dataframe from the rasters so the can be plotted using ggplot
 df_hazeva = raster_to_df(rast_cc_hazeva)
 df_ein_yahav = raster_to_df(rast_cc_ein_yahav)
 df_paran = raster_to_df(rast_cc_paran)
@@ -443,6 +460,8 @@ df_tzopar = raster_to_df(rast_cc_tzofar)
 # b = st_read(file.path(GIS_dir, "greenhouses.gpkg"),
 #             layer="yishuv_areas_b500")
 # b_h = b[1, ]
+
+#plots using ggplot
 
 pdf("./output/hazeva_18_n.pdf", width = 14, height = 10)
 ggplot()+
@@ -522,20 +541,24 @@ ggplot()+
   scale_y_continuous(breaks = seq(3378000,3388000, by = 2000))
 dev.off()
 
-#makes a freqency table for each yishuv
+# creates a freqency table for each yishuv
 frequency_table_hazeva = frequency_table(tif_cc = tif_cc_Hazeva, yishuv = yishuv_n[1])
 frequency_table_ein_yahav = frequency_table(tif_cc = tif_cc_Ein_Yahav, yishuv = yishuv_n[2])
 frequency_table_paran = frequency_table(tif_cc = tif_cc_Paran, yishuv = yishuv_n[3])
 frequency_table_tzofar = frequency_table(tif_cc = tif_cc_Tzofar, yishuv = yishuv_n[4])
 frequency_table_h_eh_i = frequency_table(tif_cc = tif_cc_H_EH_I, yishuv = yishuv_n[5])
 
+# combindes all the frequency tables together (on top of each other)
 frequency_table_all = rbind(frequency_table_hazeva, frequency_table_h_eh_i, frequency_table_ein_yahav,
                             frequency_table_tzofar, frequency_table_paran)
 
+# manipulate the full table and  get rid of the open ground then plot
 ft_all = frequency_table_all %>%
   filter(value != "Open Ground") %>%
   mutate(yishuv_name = substr(name,1,nchar(name)-5))
 pdf("./output/pixel_by_class.pdf", width = 10, height = 7)
+
+# plot the table using the ggplot - number of pixels
 ft_all %>%
   ggplot(aes(x=years, y=count, group=value, color=value)) +
   geom_line(size = 1.2, alpha = 0.7)+
@@ -550,7 +573,7 @@ ft_all %>%
   theme(plot.title=element_text(hjust=0.5))
 dev.off()
   
-
+# plot the table using the ggplot - percent land cover
 ft_all %>%
   ggplot(aes(x=years, y=porportion, group=value, color=value)) +
   geom_line(size = 1.2)+
@@ -631,20 +654,22 @@ ft_all %>%
 # })
 
 # Change Detection 
-
+# calculates change detection to 16 classes
 CD_hazeva = change_detection(rast = rast_cc_hazeva)
 CD_ein_yahav = change_detection(rast = rast_cc_ein_yahav)
 CD_paran = change_detection(rast = rast_cc_paran)
 CD_h_eh_i = change_detection(rast = rast_cc_h_eh_i)
 CD_tzofar = change_detection(rast = rast_cc_tzofar)
 
-
+# create a dataframe from the rasters so the can be plotted using ggplot
 df_hazeva_cd = raster_2_df_CD(CD_hazeva)
 df_ein_yahav_cd = raster_2_df_CD(CD_ein_yahav)
 df_paran_cd = raster_2_df_CD(CD_paran)
 df_h_eh_i_cd = raster_2_df_CD(CD_h_eh_i)
 df_tzopar_cd = raster_2_df_CD(CD_tzofar)
 
+
+# plot the CD using ggplot
 pdf("./output/hazeva_cd_17_1.pdf", width = 14, height = 8)
 ggplot()+
   geom_raster(data = df_hazeva_cd, aes(x=x, y=y, fill = cover))+
@@ -703,6 +728,7 @@ ggplot()+
 dev.off()
 
 #change function to get yishuv name from config
+# calculate how many times each pixel changed
 CD_sum_hazeva = change_sum(rast = rast_cc_hazeva)
 CD_sum_ein_yahav = change_sum(rast = rast_cc_ein_yahav)
 CD_sum_paran = change_sum(rast = rast_cc_paran)
