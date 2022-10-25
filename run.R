@@ -155,6 +155,10 @@ training_data_l8 = st_read(file.path(GIS_dir,"greenhouses.gpkg"),
 #rast_4_RF_l8 = crop_rasters_td$LC08_L2SP_174039_20200214_20200823_02_T1
 
 #should change to...
+# load images from the file 
+rast_4_RF_l5 = rast("output\\fullarea\\Full_Area_2002.tif")
+rast_4_RF_l8 = rast("output\\fullarea\\Full_Area_2020.tif")
+#should change to...
 rast_4_RF_l5 = crop_rasters$fullarea2002
 rast_4_RF_l8 = crop_rasters$fullarea2020
 
